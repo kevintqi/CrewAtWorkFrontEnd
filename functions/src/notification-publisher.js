@@ -5,44 +5,48 @@ class NotificationPublisher {
     }
 
     send(data) {
+        const payload = {
+            notification: {
+                title: data.title,
+                body: data.body
+            }
+        };
+        return this._getTokens().then(() => {
+            return this._sendToDevice(payload);
+        });
+    }
+    _getTokens() {
         return this.admin.database().ref(`notificationTokens`).once('value')
             .then((snapshot) => {
                 this.tokens = Object.keys(snapshot.val());
-                const payload = {
-                    notification: {
-                        title: data.title,
-                        body: data.body
-                    }
-                };
-                return this.admin.messaging().sendToDevice(this.tokens, payload);
-            }).then((status) => {
+                return this.tokens;
+            });
+    }
+
+    _sendToDevice(payload) {
+        return this.admin.messaging().sendToDevice(this.tokens, payload)
+            .then((status) => {
                 return this._handleStatus(status);
-            }).catch((err) => {
-                err.code = 500;
-                throw err;
             });
     }
 
     _handleStatus(status) {
-        const internalErr = [];
-        return new Promise((resolve, reject) => {
-                status.forEach((result, i) => {
-                    if (result.error) {
-                        console.error('Failure sending notification to', this.tokens[i], result.error);
-                        internalErr.push(this.tokens[i]);
-                    }
-                });
-                if (internalErr.length !== 0) {
-                    const err = new Error();
-                    err.code = 500;
-                    err.message = {
-                        error: internalErr
-                    }
-                    return reject(err);
-                }
-                return resolve();
-            });
-}
+        if (this._checkResults(status.results)) {
+            throw new Error("failed sending notification to some listeners");
+        }
+        return Promise.resolve();
+    }
+    
+    _checkResults(results) {
+        let errOccured = false;
+        results.forEach((result, i) => {    
+            if (result.error) {
+                console.error('Failure sending notification to', this.tokens[i], result.error);
+                errOccured = true;
+            }
+        });
+        return errOccured;
+    }
 }
 
 module.exports = NotificationPublisher;
