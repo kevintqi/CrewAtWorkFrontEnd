@@ -1,26 +1,22 @@
-class NotificationPublisher {
+class Publisher {
     constructor(admin) {
         this.admin = admin;
         this.tokens = [];
     }
 
-    send(data) {
+    send(tokens, data) {
+        this.tokens = tokens;
+        if (this.tokens.length === 0) {
+            console.log('No subscriber found');
+            return Promise.resolve();
+        }
         const payload = {
             notification: {
                 title: data.title,
                 body: data.body
             }
         };
-        return this._getTokens().then(() => {
-            return this._sendToDevice(payload);
-        });
-    }
-    _getTokens() {
-        return this.admin.database().ref(`notificationTokens`).once('value')
-            .then((snapshot) => {
-                this.tokens = Object.keys(snapshot.val());
-                return this.tokens;
-            });
+        return this._sendToDevice(payload);
     }
 
     _sendToDevice(payload) {
@@ -32,7 +28,7 @@ class NotificationPublisher {
 
     _handleStatus(status) {
         if (this._checkResults(status.results)) {
-            throw new Error("failed sending notification to some listeners");
+            throw new Error('failed sending notification to some listeners');
         }
         return Promise.resolve();
     }
@@ -49,4 +45,4 @@ class NotificationPublisher {
     }
 }
 
-module.exports = NotificationPublisher;
+module.exports = Publisher;
