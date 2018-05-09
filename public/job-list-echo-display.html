@@ -1,0 +1,277 @@
+<link rel="import" href="bower_components/polymer/polymer-element.html">
+<link rel="import" href="bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="bower_components/vaadin-grid/all-imports.html">
+<link rel="import" href="bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="bower_components/iron-icons/av-icons.html">
+<link rel="import" href="bower_components/paper-spinner/paper-spinner.html">
+
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="job-list-echo-display">
+  <template>
+    <style include="shared-styles iron-flex">
+      :host {
+        display: block;
+
+        padding: 10px;
+      }
+
+      h4 {
+        color: #0667D0;
+        @apply --layout-horizontal;
+        @apply --layout-center-center;
+      }
+
+      .vgrid-material-style {
+        height: auto;
+      }
+
+      .wrap {
+        white-space: normal;
+      }
+
+       /* Used for card-waiting */
+      .state-waiting {
+        background:orangered;
+        color:mintcream;
+      }
+
+      .state-ready {
+        background: green;
+        color:mintcream;
+      }
+
+      paper-spinner.multi {
+        --paper-spinner-layer-1-color: var(--paper-purple-500);
+        --paper-spinner-layer-2-color: var(--paper-cyan-500);
+        --paper-spinner-layer-3-color: var(--paper-blue-grey-500);
+        --paper-spinner-layer-4-color: var(--paper-amber-500);
+      }
+
+    </style>
+
+    <div class="card">
+      <div class="circle">Sebeca</div>
+      <h3> Welcome to the Beca Echo Display</h3>
+      <div class="card state-waiting layout horizontal" id="card-waiting">
+        <iron-icon icon="av:hearing"></iron-icon>
+        <paper-spinner class="multi" active id="waiting-spinner"></paper-spinner>
+        <label id="label-waiting">
+          <h3>Waiting for input</h3>
+        </label>
+      </div>
+    </div>
+
+    <div hidden="[[loading]]" class="card">
+      <!-- <iron-ajax id="awsSource" handle-as="json" on-response="_handleResponse" loading="{{loading}}"> -->
+      <iron-ajax id="awsSource" handle-as="json" on-response="_handleResponse">
+      </iron-ajax>
+
+      <div hidden="[[loading]]">
+        <vaadin-grid id="material" class="vgrid-material-style" aria-label="List of Jobs" items="[[jobs]]">
+          <vaadin-grid-column>
+            <template class="header">
+              <h4>Name</h4>
+            </template>
+            <template>
+              <span class="wrap">
+                [[item.contact.name]] </template>
+          </vaadin-grid-column>
+
+          <vaadin-grid-column>
+            <template class="header">
+              <h4>Phone</h4>
+            </template>
+            <template>
+              <span class="wrap">
+                [[item.contact.phoneNumber]] </template>
+          </vaadin-grid-column>
+
+          <vaadin-grid-column>
+            <template class="header">
+              <h4>Job ID</h4>
+              </span>
+            </template>
+            <template>
+              <span class="wrap">
+                [[item.jobId]]
+              </span>
+            </template>
+          </vaadin-grid-column>
+
+          <vaadin-grid-column>
+            <template class="header">
+              <h4>Zip Code</h4>
+            </template>
+            <template>
+              <span class="wrap">
+                [[item.location.zipCode]]
+              </span>
+            </template>
+          </vaadin-grid-column>
+
+          <vaadin-grid-column>
+            <template class="header">
+              <h4>City</h4>
+            </template>
+            <template>
+              <span class="wrap">
+                [[item.location.city]]
+              </span>
+            </template>
+          </vaadin-grid-column>
+
+          <vaadin-grid-column>
+            <template class="header">
+              <h4>Street</h4>
+            </template>
+            <template>
+              <span class="wrap">
+                [[item.location.street]]
+              </span>
+            </template>
+          </vaadin-grid-column>
+
+          <vaadin-grid-column>
+            <template class="header">
+              <h4>Repeat Type</h4>
+            </template>
+            <template>
+              <span class="wrap">
+                [[item.schedule.repeatType]]
+              </span>
+            </template>
+          </vaadin-grid-column>
+
+          <vaadin-grid-column>
+            <template class="header">
+              <h4>Start Time</h4>
+            </template>
+            <template>
+              <span class="wrap">
+                [[item.schedule.startTime]]
+              </span>
+            </template>
+          </vaadin-grid-column>
+
+          <vaadin-grid-column>
+            <template class="header">
+              <h4>End Time</h4>
+            </template>
+            <template>
+              <span class="wrap">
+                [[item.schedule.endTime]]
+              </span>
+            </template>
+          </vaadin-grid-column>
+
+          <vaadin-grid-column>
+            <template class="header">
+              <h4>Start Date</h4>
+            </template>
+            <template>
+              <span class="wrap">
+                [[item.schedule.startDate]]
+              </span>
+            </template>
+          </vaadin-grid-column>
+
+          <vaadin-grid-column>
+            <template class="header">
+              <h4>Squad ID</h4>
+            </template>
+            <template>
+              <span class="wrap">
+                [[item.squadId]]
+              </span>
+            </template>
+          </vaadin-grid-column>
+
+          </vaadin-grid-column>
+        </vaadin-grid>
+      </div>
+
+    </div>
+
+  </template>
+
+  <script>
+    class JobListEchoDisplay extends Polymer.Element {
+      static get is() {
+        return 'job-list-echo-display';
+      }
+
+      static get properties() {
+        return {
+          loading: {
+            type: Boolean,
+            notify: true,
+            value: true
+          },
+          squadIdStr: {
+            type: String,
+            value: ""
+          }
+        }
+      }
+
+      ready() {
+        super.ready();
+        window.addEventListener('echo-msg', e => { this._handleEcho(e)});
+        // Polymer.RenderStatus.afterNextRender(this, function () {
+        //   this._getJobs();
+        // });
+      }
+
+      _handleEcho(e) {
+        console.log("_handleEcho: ", e);
+        var payload = JSON.parse(e.detail.msg);
+        console.log(e.detail.cmd);
+        console.log(e.detail.msg);
+        this._processCmd(e.detail.cmd, payload.squad);
+      }
+
+      _processCmd(cmd, squad) {
+        switch (cmd) {
+          case "beca-list-jobs":
+            this.$['label-waiting'].innerHTML = '<h3> Ready for Input </h3>';
+            this.$['waiting-spinner'].hidden = false;
+            this.$['waiting-spinner'].active = true;
+            this.$['card-waiting'].className = 'card state-ready layout horizontal';
+            this.showSpinner = true;
+            break;
+          case "beca-list-jobs-specify-squad":
+            this.squadIdStr = squad;
+            this._getJobs();
+            break;
+          default:
+            console.log("Error: unknown command");
+        }
+      }
+
+      _getJobs() {
+        var ajax = this.$.awsSource;
+        ajax.url =
+          'https://4s3eofq8j5.execute-api.us-west-2.amazonaws.com/dev/api/v1/job?squadId=' + this.squadIdStr;
+        ajax.generateRequest();
+      }
+
+      _handleResponse(response) {
+        this._normalize(response.detail.__data.response);
+        this.loading = false;
+      }
+
+      _normalize(data) {
+        if (data.jobs !== undefined) {
+          this.set('jobs', data.jobs);
+          this.jsonString = JSON.stringify(data.jobs);
+        }
+      }
+
+    }
+
+    window.customElements.define(JobListEchoDisplay.is, JobListEchoDisplay);
+  </script>
+</dom-module>

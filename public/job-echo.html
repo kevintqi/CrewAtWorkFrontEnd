@@ -1,0 +1,62 @@
+<link rel="import" href="bower_components/polymer/polymer-element.html">
+<link rel="import" href="shared-styles.html">
+<link rel="import" href="bower_components/polymerfire/firebase-messaging.html">
+<link rel="import" href="bower_components/polymerfire/polymerfire.html">
+<link rel="import" href="bower_components/polymerfire/firebase-app.html">
+
+<link rel="import" href="job-list-echo-display.html">
+
+<dom-module id="job-echo">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+        padding: 10px;
+      }
+    </style>
+
+    <!-- IMPORTANT: The firebase-app element needs to appear before any
+      other firebase-* elements -->
+    <firebase-app
+      id="firebase"
+      auth-domain="crewatworkfrontend.firebaseapp.com"
+      api-key="AIzaSyCLsg2gkWT_9b6TcUM5zP7cHPkF2yjYzyc"
+      database-url="https://crewatworkfrontend.firebaseio.com"
+      project-id="crewatworkfrontend" storage-bucket=""
+      messaging-sender-id="419564990758">
+    </firebase-app>
+
+
+    <firebase-messaging id="messaging" token="{{token}}" on-message="_handleMessage">
+    </firebase-messaging>
+
+    <div class="card">
+      <p>Token:</p>
+      <p>[[token]]</p>
+    </div>
+
+    <job-list-echo-display></job-list-echo-display>
+
+  </template>
+
+  <script>
+    class JobEcho extends Polymer.Element {
+      static get is() { return 'job-echo'; }
+      ready() {
+        super.ready();
+        this.$.messaging.requestPermission().then(() => {
+          console.log('user subscribed successfully!');
+        }, (err) => {
+          console.log('user subscribe failed :(', err);
+        });
+      }
+      _handleMessage() {
+        console.log(arguments);
+        window.dispatchEvent(new CustomEvent('echo-msg', {
+          detail: {'cmd': arguments[1].message.notification.title,
+          'msg': arguments[1].message.notification.body}}));
+        }
+      }
+      window.customElements.define(JobEcho.is, JobEcho);
+    </script>
+  </dom-module>

@@ -1,0 +1,202 @@
+<link rel="import" href="bower_components/polymer/polymer-element.html">
+<link rel="import" href="bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="bower_components/iron-icons/av-icons.html">
+<link rel="import" href="bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="bower_components/paper-input/paper-input.html">
+<link rel="import" href="bower_components/paper-button/paper-button.html">
+<link rel="import" href="bower_components/polymerfire/firebase-app.html">
+<link rel="import" href="bower_components/polymerfire/firebase.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="job-echo-display">
+  <template>
+    <style include="shared-styles iron-flex">
+      :host {
+        display: block;
+        padding: 10px;
+      }
+
+      paper-spinner.multi {
+        --paper-spinner-layer-1-color: var(--paper-purple-500);
+        --paper-spinner-layer-2-color: var(--paper-cyan-500);
+        --paper-spinner-layer-3-color: var(--paper-blue-grey-500);
+        --paper-spinner-layer-4-color: var(--paper-amber-500);
+      }
+
+      .state-active {
+        visibility: active;
+        background: lightskyblue;
+      }
+
+      .state-inactive {
+        visibility: hidden;
+        background: gray;
+      }
+
+      .state-processed {
+        visibility: visible;
+        background: white;
+      }
+
+      /* Used for card-done */
+      .state-confirmed {
+        background:gold;
+      }
+
+      /* Used for card-waiting */
+      .state-waiting {
+        background:orangered;
+        color:mintcream;
+      }
+
+      /* Used for card-waiting */
+      .state-ready {
+        background: green;
+        color:mintcream;
+      }
+
+      iron-label {
+        color: black;
+        font-weight: bold;
+        font-size: x-large;
+      }
+
+    </style>
+
+    <div class="card">
+      <div class="circle">Sebeca</div>
+      <h3> Welcome to the Beca Echo Display</h3>
+      <div class="card state-waiting layout horizontal" id="card-waiting">
+        <iron-icon icon="av:hearing"></iron-icon>
+        <paper-spinner class="multi" active id="card-waiting-spinner"></paper-spinner>
+        <label id="label-waiting"><h4>Waiting for input</h4></label>
+      </div>
+    </div>
+
+    <div class="card state-inactive layout horizontal " id="card-hello">
+      <iron-icon icon="av:mic" id="card-hello-icon"></iron-icon>
+      <paper-spinner class="multi" active id="card-hello-spinner"></paper-spinner>
+      <label id="label-hello"><h1> Hello Ruben, Ready to create a job?</h1></label>
+    </div>
+
+    <div class="card state-inactive layout horizontal " id="card-name">
+      <iron-icon icon="icons:record-voice-over" id="card-name-icon"></iron-icon>
+      <paper-spinner class="multi" active id="card-name-spinner"></paper-spinner>
+      <paper-input id="card-name-input" name="name" label="Name" required autocomplete="name"></paper-input>
+    </div>
+
+    <div class="card state-inactive layout horizontal " id="card-phone">
+      <iron-icon icon="icons:record-voice-over" id="card-phone-icon"></iron-icon>
+      <paper-spinner class="multi" active id="card-phone-spinner"></paper-spinner>
+      <paper-input id="card-phone-input" name="phone" label="Phone" required autocomplete="Phone"></paper-input>
+    </div>
+
+    <div class="card state-inactive layout horizontal " id="card-street">
+      <iron-icon icon="icons:record-voice-over" id="card-street-icon"></iron-icon>
+      <paper-spinner class="multi" active id="card-street-spinner"></paper-spinner>
+      <paper-input id="card-street-input" label="Street" required autocomplete="street"></paper-input>
+    </div>
+
+    <div class="card state-inactive layout horizontal " id="card-city">
+      <iron-icon icon="icons:record-voice-over" id="card-city-icon"></iron-icon>
+      <paper-spinner class="multi" active id="card-city-spinner"></paper-spinner>
+      <paper-input id="card-city-input" label="City" required autocomplete="city"></paper-input>
+    </div>
+
+    <div class="card state-inactive layout horizontal " id="card-state">
+      <iron-icon icon="icons:record-voice-over" id="card-state-icon"></iron-icon>
+      <paper-spinner class="multi" active id="card-state-spinner"></paper-spinner>
+      <paper-input id="card-state-input" label="State" required autocomplete="state"></paper-input>
+    </div>
+
+    <div class="card state-inactive layout horizontal " id="card-zip">
+      <iron-icon icon="icons:record-voice-over" id="card-zip-icon"></iron-icon>
+      <paper-spinner class="multi" active id="card-zip-spinner"></paper-spinner>
+      <paper-input id="card-zip-input" label="Zip Code" required autocomplete="zip"></paper-input>
+    </div>
+
+    <div class="card state-inactive layout horizontal" id="card-done">
+      <iron-label> Your job has been created... </iron-label>
+      <iron-icon icon="icons:thumb-up"></iron-icon>
+    </div>
+
+  </div>
+
+</template>
+
+<script>
+  class JobEchoDisplay extends Polymer.Element {
+    static get is() {
+      return 'job-echo-display';
+    }
+
+    ready() {
+      super.ready();
+      window.addEventListener('echo-msg', e => { this._handleEcho(e)});
+    }
+
+    _handleEcho(e) {
+      console.log("_handleEcho: ", e);
+      var payload = JSON.parse(e.detail.msg);
+      console.log(e.detail.cmd);
+      console.log(e.detail.msg);
+      this._processCmd(e.detail.cmd, payload.state, payload.msg);
+    }
+
+    _processCmd(cmd, state, msg) {
+      switch (cmd) {
+        case "card-waiting":
+          this.$['label-waiting'].innerHTML = '<h3>' + msg + '</h3>';
+        break;
+          case "card-hello":
+        this.$['label-hello'].innerHTML = '<h1>' + msg + '</h1>';
+        break;
+          case "card-name":
+          case "card-phone":
+          case "card-street":
+          case "card-city":
+          case "card-state":
+          case "card-zip":
+          this.$[cmd + '-input'].value = msg;
+        break;
+        default:
+        console.log("Error: unknown command");
+      }
+
+      // Set the state
+      this.$[cmd].className = 'card ' + state + ' layout horizontal';
+
+      switch(state) {
+        case "state-ready":
+        case "state-processed":
+          this.$[cmd + '-spinner'].hidden = true;
+          this.$[cmd + '-spinner'].active = false;
+          this.$[cmd + '-icon'].icon = "icons:done";
+        break;
+        case "state-waiting":
+          this.$[cmd + '-spinner'].hidden = false;
+          this.$[cmd + '-spinner'].active = true;
+        break;
+        case "state-active":
+          this.$[cmd + '-spinner'].hidden = false;
+          this.$[cmd + '-spinner'].active = true;
+          this.$[cmd + '-icon'].icon = "icons:record-voice-over";
+        break;
+        default:
+        console.log("Unknown state");
+
+      }
+    }
+  }
+
+  window.customElements.define(JobEchoDisplay.is, JobEchoDisplay);
+</script>
+</dom-module>
+
+//https://stackoverflow.com/questions/23230079/add-a-class-to-polymer-element
+//https://www.polymer-project.org/2.0/docs/devguide/events
+
+//https://www.polymer-project.org/2.0/start/toolbox/deploy

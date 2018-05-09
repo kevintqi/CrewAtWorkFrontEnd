@@ -1,0 +1,28 @@
+<link rel="import" href="job-echo.html">
+
+<dom-module id="my-app">
+
+  <template>
+
+    <style>
+      :host {
+        display: block;
+        font-family: Roboto, sans-serif;
+        max-width: 640px;
+        margin: 0 auto;
+      }
+    </style>
+    
+    <job-echo></job-echo>
+
+  </template>
+
+  <script>
+    class MyApp extends Polymer.Element {
+      static get is() { return 'my-app'; }
+    }
+
+    window.customElements.define(MyApp.is, MyApp);
+  </script>
+
+</dom-module>
