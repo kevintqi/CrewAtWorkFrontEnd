@@ -1,0 +1,29 @@
+<link rel="import" href="bower_components/polymer/polymer-element.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="job-intro-echo-display">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+        padding: 10px;
+      }
+
+      .circle {
+        color:royalblue;
+      }
+    </style>
+
+    <div class="card">
+      <div class="circle">Sebeca</div>
+      <h3> Welcome to the Beca Echo Display</h3>
+    </div>
+  </template>
+
+  <script>
+    class JobIntroEchoDisplay extends Polymer.Element {
+      static get is() { return 'job-intro-echo-display'; }
+    }
+    window.customElements.define(JobIntroEchoDisplay.is, JobIntroEchoDisplay);
+    </script>
+  </dom-module>

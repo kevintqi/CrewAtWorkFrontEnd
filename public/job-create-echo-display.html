@@ -9,9 +9,13 @@
 <link rel="import" href="bower_components/paper-button/paper-button.html">
 <link rel="import" href="bower_components/polymerfire/firebase-app.html">
 <link rel="import" href="bower_components/polymerfire/firebase.html">
+<link rel="import" href="bower_components/iron-form/iron-form.html">
+<link rel="import" href="bower_components/iron-list/iron-list.html">
+<link rel="import" href="bower_components/iron-label/iron-label.html">
+
 <link rel="import" href="shared-styles.html">
 
-<dom-module id="job-echo-display">
+<dom-module id="job-create-echo-display">
   <template>
     <style include="shared-styles iron-flex">
       :host {
@@ -42,20 +46,23 @@
       }
 
       /* Used for card-done */
+
       .state-confirmed {
-        background:gold;
+        background: gold;
       }
 
       /* Used for card-waiting */
+
       .state-waiting {
-        background:orangered;
-        color:mintcream;
+        background: orangered;
+        color: mintcream;
       }
 
       /* Used for card-waiting */
+
       .state-ready {
         background: green;
-        color:mintcream;
+        color: mintcream;
       }
 
       iron-label {
@@ -64,139 +71,364 @@
         font-size: x-large;
       }
 
+      paper-button.green {
+        background-color: var(--paper-green-500);
+        color: white;
+      }
+
+      paper-button.green[active] {
+        background-color: var(--paper-red-500);
+      }
+
+      paper-button.disabled {
+        color: white;
+      }
+
+      iron-list {
+        width: auto;
+        margin: auto;
+        display: flex;
+        flex-direction: column;
+      }
+
+      label.list-item {
+        color: darkgreen;
+        text-transform: uppercase;
+        padding-right: 20px;
+      }
+
+      .list-container {
+        margin: auto;
+      }
+
+      .itemDiv {
+        width: 150px;
+        max-width: 150px;
+        display: inline-block;
+      }
+
     </style>
 
     <div class="card">
       <div class="circle">Sebeca</div>
-      <h3> Welcome to the Beca Echo Display</h3>
-      <div class="card state-waiting layout horizontal" id="card-waiting">
-        <iron-icon icon="av:hearing"></iron-icon>
-        <paper-spinner class="multi" active id="card-waiting-spinner"></paper-spinner>
-        <label id="label-waiting"><h4>Waiting for input</h4></label>
+      <h3> Welcome to the Beca Echo Display (JOB CREATION)</h3>
+
+
+      <template is="dom-if" if="{{showReady}}">
+        <div class="card state-waiting layout horizontal" id="beca-create-job">
+          <iron-icon icon="av:hearing"></iron-icon>
+          <paper-spinner class="multi" active id="beca-create-job-spinner"></paper-spinner>
+          <label id="label-waiting">
+            <h4>Ready for input create job</h4>
+          </label>
+        </div>
+      </template>
+
+
+      <template id='template-input' is="dom-if" if="{{jobInputStatus}}">
+        <div class="card state-active layout horizontal " id="input-card">
+          <iron-icon icon="icons:record-voice-over" id="input-card-icon"></iron-icon>
+          <paper-spinner class="multi" active id="input-card-spinner"></paper-spinner>
+          <paper-input id="input-card-input" name="inputCard" label="{{inputCardLabel}}" value="{{inputCardValue}}" required></paper-input>
+        </div>
+      </template>
+
+      <template id='template-form' is="dom-if" if="{{showStatus}}">
+        <div id="status" class="card">
+          <h2>Your job was submitted</h2>
+          <pre>HTTP response: [[response]]</pre>
+          <pre>HTTP Error: [[errorMsg]]</pre>
+        </div>
+      </template>
+
+
+      <template id='template-form' is="dom-if" if="{{isDone}}">
+        <iron-form id="form" on-iron-form-response="_handleFormSubmit" on-iron-form-error="_handleError" on-iron-form-presubmit="_presubmit"
+          content-type="application/json">
+          <form method="post" content-type="application/json" action="https://4s3eofq8j5.execute-api.us-west-2.amazonaws.com/dev/api/v1/job">
+
+            <div class="card state-confirmed layout horizontal" id="beca-create-job-done">
+              <iron-label> Ready to submit job </iron-label>
+              <iron-icon icon="icons:thumb-up"></iron-icon>
+              <paper-button class="green" on-tap="_submit">Submit</paper-button>
+            </div>
+
+          </form>
+        </iron-form>
+      </template>
+
+      <div>
+        <iron-list items="[[echoInput]]" as="item">
+          <template>
+            <div class="card list-container layout horizontal">
+              <div class="itemDiv">
+                <label class="list-item">
+                  <strong>[[item.label]]
+                  <strong>
+                </label>
+              </div>
+              <div>
+                <label>[[item.value]]</label>
+              </div>
+            </div>
+          </template>
+        </iron-list>
       </div>
+
     </div>
 
-    <div class="card state-inactive layout horizontal " id="card-hello">
-      <iron-icon icon="av:mic" id="card-hello-icon"></iron-icon>
-      <paper-spinner class="multi" active id="card-hello-spinner"></paper-spinner>
-      <label id="label-hello"><h1> Hello Ruben, Ready to create a job?</h1></label>
-    </div>
+  </template>
 
-    <div class="card state-inactive layout horizontal " id="card-name">
-      <iron-icon icon="icons:record-voice-over" id="card-name-icon"></iron-icon>
-      <paper-spinner class="multi" active id="card-name-spinner"></paper-spinner>
-      <paper-input id="card-name-input" name="name" label="Name" required autocomplete="name"></paper-input>
-    </div>
-
-    <div class="card state-inactive layout horizontal " id="card-phone">
-      <iron-icon icon="icons:record-voice-over" id="card-phone-icon"></iron-icon>
-      <paper-spinner class="multi" active id="card-phone-spinner"></paper-spinner>
-      <paper-input id="card-phone-input" name="phone" label="Phone" required autocomplete="Phone"></paper-input>
-    </div>
-
-    <div class="card state-inactive layout horizontal " id="card-street">
-      <iron-icon icon="icons:record-voice-over" id="card-street-icon"></iron-icon>
-      <paper-spinner class="multi" active id="card-street-spinner"></paper-spinner>
-      <paper-input id="card-street-input" label="Street" required autocomplete="street"></paper-input>
-    </div>
-
-    <div class="card state-inactive layout horizontal " id="card-city">
-      <iron-icon icon="icons:record-voice-over" id="card-city-icon"></iron-icon>
-      <paper-spinner class="multi" active id="card-city-spinner"></paper-spinner>
-      <paper-input id="card-city-input" label="City" required autocomplete="city"></paper-input>
-    </div>
-
-    <div class="card state-inactive layout horizontal " id="card-state">
-      <iron-icon icon="icons:record-voice-over" id="card-state-icon"></iron-icon>
-      <paper-spinner class="multi" active id="card-state-spinner"></paper-spinner>
-      <paper-input id="card-state-input" label="State" required autocomplete="state"></paper-input>
-    </div>
-
-    <div class="card state-inactive layout horizontal " id="card-zip">
-      <iron-icon icon="icons:record-voice-over" id="card-zip-icon"></iron-icon>
-      <paper-spinner class="multi" active id="card-zip-spinner"></paper-spinner>
-      <paper-input id="card-zip-input" label="Zip Code" required autocomplete="zip"></paper-input>
-    </div>
-
-    <div class="card state-inactive layout horizontal" id="card-done">
-      <iron-label> Your job has been created... </iron-label>
-      <iron-icon icon="icons:thumb-up"></iron-icon>
-    </div>
-
-  </div>
-
-</template>
-
-<script>
-  class JobEchoDisplay extends Polymer.Element {
-    static get is() {
-      return 'job-echo-display';
-    }
-
-    ready() {
-      super.ready();
-      window.addEventListener('echo-msg', e => { this._handleEcho(e)});
-    }
-
-    _handleEcho(e) {
-      console.log("_handleEcho: ", e);
-      var payload = JSON.parse(e.detail.msg);
-      console.log(e.detail.cmd);
-      console.log(e.detail.msg);
-      this._processCmd(e.detail.cmd, payload.state, payload.msg);
-    }
-
-    _processCmd(cmd, state, msg) {
-      switch (cmd) {
-        case "card-waiting":
-          this.$['label-waiting'].innerHTML = '<h3>' + msg + '</h3>';
-        break;
-          case "card-hello":
-        this.$['label-hello'].innerHTML = '<h1>' + msg + '</h1>';
-        break;
-          case "card-name":
-          case "card-phone":
-          case "card-street":
-          case "card-city":
-          case "card-state":
-          case "card-zip":
-          this.$[cmd + '-input'].value = msg;
-        break;
-        default:
-        console.log("Error: unknown command");
+  <script>
+    class JobCreateEchoDisplay extends Polymer.Element {
+      static get is() {
+        return 'job-create-echo-display';
       }
 
-      // Set the state
-      this.$[cmd].className = 'card ' + state + ' layout horizontal';
+      static get properties() {
+        return {
+          response: {
+            type: String,
+            value: "none"
+          },
+          errorMsg: {
+            type: String,
+            value: "No errors"
+          },
+          echoInput: {
+            type: Array,
+            notify: true,
+            value: function () {
+              return [
+                // Example { 'id': 'squadId', 'label': 'Squad ID', 'value': '3333'},
+              ]
+            }
+          },
+          idx: {
+            type: Number,
+            notify: true,
+            value: 0
+          },
+          jobInputStatus: {
+            type: Boolean,
+            notify: true,
+            value: false
+          },
+          isDone: {
+            type: Boolean,
+            notify: true,
+            value: false
+          },
+          showReady: {
+            type: Boolean,
+            notify: true,
+            value: true
+          },
+          ShowStatus: {
+            type: Boolean,
+            notify: true,
+            value: false
+          },
+          inputCardLabel: {
+            type: String,
+            notify: true,
+            value: ""
+          },
+          inputCardValue: {
+            type: String,
+            notify: true,
+            value: ""
+          }
+        }
+      }
 
-      switch(state) {
-        case "state-ready":
-        case "state-processed":
-          this.$[cmd + '-spinner'].hidden = true;
-          this.$[cmd + '-spinner'].active = false;
-          this.$[cmd + '-icon'].icon = "icons:done";
-        break;
-        case "state-waiting":
-          this.$[cmd + '-spinner'].hidden = false;
-          this.$[cmd + '-spinner'].active = true;
-        break;
-        case "state-active":
-          this.$[cmd + '-spinner'].hidden = false;
-          this.$[cmd + '-spinner'].active = true;
-          this.$[cmd + '-icon'].icon = "icons:record-voice-over";
-        break;
-        default:
-        console.log("Unknown state");
+      ready() {
+        super.ready();
+        window.addEventListener('echo-msg', e => {
+          this._handleEcho(e)
+        });
+      }
 
+      _handleEcho(e) {
+        var payload = JSON.parse(e.detail.msg);
+        this._processCmd(e.detail.cmd, payload.value);
+      }
+
+      _processCmd(cmd, value) {
+
+        switch (cmd) {
+          case "beca-create-job":
+            // this.$['label-waiting'].innerHTML = '<h3>' + value + '</h3>';
+            let localElement = this.shadowRoot.querySelector('#beca-create-job');
+            localElement.className = 'card state-ready layout horizontal';
+            break;
+          case "beca-create-job-squad-id":
+          case "beca-create-job-contact-name":
+          case "beca-create-job-contact-phone":
+          case "beca-create-job-location-street":
+          case "beca-create-job-location-city":
+          case "beca-create-job-location-state":
+          case "beca-create-job-location-zipcode":
+          case "beca-create-job-schedule-repeat-type":
+          case "beca-create-job-schedule-start-date":
+          case "beca-create-job-schedule-end-date":
+          case "beca-create-job-schedule-start-time":
+          case "beca-create-job-schedule-end-time":
+            this.set('jobInputStatus', true);
+            this.set('isDone', false);
+            this.set('showReady', false);
+            this._saveEchoInputData();
+            break;
+          case "beca-create-job-done":
+            this._saveEchoInputData();
+            this.set('showReady', false);
+            this.set('jobInputStatus', false);
+            this.set('isDone', true);
+            break;
+          default:
+            console.log("Error: unknown command");
+        }
+
+        switch (cmd) {
+          case "beca-create-job-squad-id":
+            this._addToEchoInput('squadId', 'Squad Id', value);
+            break;
+          case "beca-create-job-contact-name":
+            this._addToEchoInput('name', 'Name', value);
+            break;
+          case "beca-create-job-contact-phone":
+            this._addToEchoInput('phone', 'Phone', value);
+            break;
+          case "beca-create-job-location-street":
+            this._addToEchoInput('street', 'Street', value);
+            break;
+          case "beca-create-job-location-city":
+            this._addToEchoInput('city', 'City', value);
+            break;
+          case "beca-create-job-location-state":
+            this._addToEchoInput('state', 'State', value);
+            break;
+          case "beca-create-job-location-zipcode":
+            this._addToEchoInput('zipCode', 'Zipcode', value);
+            break;
+          case "beca-create-job-schedule-repeat-type":
+            this._addToEchoInput('repeatType', 'Repeat Type', value);
+            break;
+          case "beca-create-job-schedule-start-date":
+            this._addToEchoInput('startDate', 'Start Date', value);
+            break;
+          case "beca-create-job-schedule-end-date":
+            this._addToEchoInput('endDate', 'End Date', value);
+            break;
+          case "beca-create-job-schedule-start-time":
+            this._addToEchoInput('startTime', 'Start Time', value);
+            break;
+          case "beca-create-job-schedule-end-time":
+            this._addToEchoInput('endTime', 'End Time', value);
+            break;
+        }
+      }
+
+      _saveEchoInputData() {
+        let localElement = this.shadowRoot.querySelector('#input-card-input');
+        if (localElement) {
+          let targetElem = 'echoInput.' + this.idx + '.value'
+          this.set(targetElem, localElement.value);
+          console.log(targetElem);
+          console.log(localElement.label);
+          console.log(this.idx);
+          console.log(localElement.value);
+          console.log(this.echoInput);
+        }
+      }
+
+      _addToEchoInput(id, label, value) {
+
+        var index = this.echoInput.findIndex(function(item, i){
+          return item.id === id;
+        });
+
+          let elem = {
+            'id': id,
+            'label': label,
+            'value': value
+          };
+
+          if (index !== -1) {
+            this.splice('echoInput', index, 1, );
+          }
+
+          this.idx = index;
+          this.push('echoInput', elem);
+          this.set('inputCardLabel', label);
+          this.set('inputCardValue', value);
+
+          this.idx = this.echoInput.findIndex(function(item, i){
+            return item.id === id;
+          });
+      }
+
+      _findEchoInputValue(id) {
+        let index = this.echoInput.findIndex(function(item, i){
+          return item.id === id;
+        });
+
+        return (index !== -1) ? this.echoInput[index].value : "unknown";
+      }
+
+      _presubmit() {
+        let newBody = {
+          "squadId": this._findEchoInputValue("squadId"),
+          "contact": {
+            "name": this._findEchoInputValue("name"),
+            "phoneNumber":  this._findEchoInputValue("phone")
+          },
+          "location": {
+            "street": this._findEchoInputValue("street"),
+            "city": this._findEchoInputValue("city"),
+            "state": this._findEchoInputValue("state"),
+            "zipCode": this._findEchoInputValue("zipCode")
+          },
+          "schedule": {
+            "repeatType": this._findEchoInputValue("repeatType"),
+            "startDate": this._findEchoInputValue("startDate"),
+            "endDate": this._findEchoInputValue("endDate"),
+            "startTime": this._findEchoInputValue("startTime"),
+            "endTime": this._findEchoInputValue("endTime")
+          }
+        };
+
+        let form = this.shadowRoot.querySelector('#form');
+
+        form.request.body = newBody;
+        form.request.headers = {
+          'content-type': 'application/json'
+        };
+      }
+
+      _submit() {
+        // this.$.form.submit();
+        let localElement = this.shadowRoot.querySelector('#form');
+        localElement.submit()
+      }
+
+      _handleFormSubmit(e) {
+        this.response = JSON.stringify(e.detail.response, '', 2);
+        this.set('isDone', false);
+        this.set('showStatus', true);
+      }
+
+      _handleError(e) {
+        console.log("form errors: ", e.detail.error);
+        this.errorMsg = e.detail.error;
+        this.set('isDone', false);
+        this.set('showStatus', true);
       }
     }
-  }
 
-  window.customElements.define(JobEchoDisplay.is, JobEchoDisplay);
-</script>
+    window.customElements.define(JobCreateEchoDisplay.is, JobCreateEchoDisplay);
+  </script>
 </dom-module>
 
-//https://stackoverflow.com/questions/23230079/add-a-class-to-polymer-element
-//https://www.polymer-project.org/2.0/docs/devguide/events
-
+//https://stackoverflow.com/questions/23230079/add-a-class-to-polymer-element //https://www.polymer-project.org/2.0/docs/devguide/events
 //https://www.polymer-project.org/2.0/start/toolbox/deploy

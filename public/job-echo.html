@@ -3,8 +3,11 @@
 <link rel="import" href="bower_components/polymerfire/firebase-messaging.html">
 <link rel="import" href="bower_components/polymerfire/polymerfire.html">
 <link rel="import" href="bower_components/polymerfire/firebase-app.html">
+<link rel="import" href="bower_components/iron-pages/iron-pages.html">
 
+<link rel="import" href="job-intro-echo-display.html">
 <link rel="import" href="job-list-echo-display.html">
+<link rel="import" href="job-create-echo-display.html">
 
 <dom-module id="job-echo">
   <template>
@@ -30,18 +33,36 @@
     <firebase-messaging id="messaging" token="{{token}}" on-message="_handleMessage">
     </firebase-messaging>
 
+    <iron-pages
+      selected="[[page]]"
+      attr-for-selected="name"
+      fallback-selection="job-intro-echo-display">
+          <job-intro-echo-display name="job-intro-echo-display"></job-intro-echo-display>
+          <job-list-echo-display name="beca-list-jobs"></job-list-echo-display>
+          <job-create-echo-display name="beca-create-job"></job-create-echo-display>
+    </iron-pages>
+
     <div class="card">
       <p>Token:</p>
       <p>[[token]]</p>
     </div>
-
-    <job-list-echo-display></job-list-echo-display>
 
   </template>
 
   <script>
     class JobEcho extends Polymer.Element {
       static get is() { return 'job-echo'; }
+
+      static get properties() {
+        return {
+          page: {
+            type: String,
+            notify: true,
+            value: "job-intro-echo-display"
+          }
+        }
+      }
+
       ready() {
         super.ready();
         this.$.messaging.requestPermission().then(() => {
@@ -52,11 +73,24 @@
       }
       _handleMessage() {
         console.log(arguments);
+        let cmd = arguments[1].message.notification.title;
+        this._pageChange(cmd);
         window.dispatchEvent(new CustomEvent('echo-msg', {
-          detail: {'cmd': arguments[1].message.notification.title,
+          detail: {'cmd': cmd,
           'msg': arguments[1].message.notification.body}}));
+      }
+
+      _pageChange(cmd) {
+        switch(cmd) {
+          case "beca-list-jobs":
+          case "beca-create-job":
+            this.page = cmd;
+          break;
+          default:
+          break;
         }
       }
+    }
       window.customElements.define(JobEcho.is, JobEcho);
     </script>
   </dom-module>
