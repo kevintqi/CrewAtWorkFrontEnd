@@ -12,56 +12,176 @@ var cmd_part3 = "\", \"body\": ";
 var cmd_body = "{\"state\": \"state-ready\", \"msg\": \"Escuchando\"}";
 var cmd_part4 =  "}}' https://fcm.googleapis.com/fcm/send";
 
-var questions = [
+
+var squad_questions = [
   {
     type: "list",
     name: "cmd",
     message: "Please enter state command",
     choices: [
       new inquirer.Separator(),
-      "card-hello",
-      "card-name",
-      "card-phone",
-      "card-street",
-      "card-city",
-      "card-state",
-      "card-zip",
+      "beca-create-job",
       new inquirer.Separator(),
-      "card-waiting",
-      new inquirer.Separator(),
-      "card-done",
-      new inquirer.Separator()
-    ]
-  },
-  {
-    type: "list",
-    name: "state",
-    message: "Please enter the state",
-    choices: [
-      new inquirer.Separator(),
-      "state-active",
-      "state-inactive",
-      "state-processed",
-      new inquirer.Separator(),
-      "state-waiting",
-      "state-ready",
-      new inquirer.Separator(),
-      "state-confirmed",
+      "beca-create-job-squad-id",
       new inquirer.Separator()
     ]
   },
   {
     type: 'input',
-    name: 'msg',
-    message: 'Please enter the message',
-    default: 'none'
+    name: 'squadId',
+    message: 'Please enter the squad Id',
+    default: 's78999'
   }
 ];
+
+var schedule_questions = [
+  {
+    type: "list",
+    name: "cmd",
+    message: "Please enter state command",
+    choices: [
+      new inquirer.Separator(),
+      "beca-create-job",
+      new inquirer.Separator(),
+      "beca-create-job-schedule",
+      new inquirer.Separator(),
+      "beca-create-job-submit"
+    ]
+  },
+  {
+    type: 'input',
+    name: 'repeatType',
+    message: 'Please enter repeat type',
+    default: 'weekly'
+  },
+  {
+    type: 'input',
+    name: 'startDate',
+    message: 'Please enter start date',
+    default: '2018-05-05'
+  },
+  {
+    type: 'input',
+    name: 'endDate',
+    message: 'Please enter end date',
+    default: '2018-05-04'
+  },
+  {
+    type: 'input',
+    name: 'startTime',
+    message: 'Please enter startTime',
+    default: '3:00AM'
+  },
+  {
+    type: 'input',
+    name: 'endTime',
+    message: 'Please enter end time',
+    default: '5:00PM'
+  }
+];
+
+var location_questions = [
+  {
+    type: "list",
+    name: "cmd",
+    message: "Please enter state command",
+    choices: [
+      new inquirer.Separator(),
+      "beca-create-job",
+      new inquirer.Separator(),
+      "beca-create-job-location"
+    ]
+  },
+  {
+    type: 'input',
+    name: 'street',
+    message: 'Please enter street',
+    default: '357 Doty Ave'
+  },
+  {
+    type: 'input',
+    name: 'city',
+    message: 'Please enter city',
+    default: 'Hawthorne'
+  },
+  {
+    type: 'input',
+    name: 'state',
+    message: 'Please enter state',
+    default: 'California'
+  },
+  {
+    type: 'input',
+    name: 'zipcode',
+    message: 'Please enter zip code',
+    default: '90250'
+  }
+];
+
+var contact_questions = [
+  {
+    type: "list",
+    name: "cmd",
+    message: "Please enter state command",
+    choices: [
+      new inquirer.Separator(),
+      "beca-create-job",
+      new inquirer.Separator(),
+      "beca-create-job-contact",
+    ]
+  },
+  {
+    type: 'input',
+    name: 'name',
+    message: 'Please enter name',
+    default: 'Mr. X'
+  },
+  {
+    type: 'input',
+    name: 'phone',
+    message: 'Please enter phone number',
+    default: '(310) 333 5050'
+  }
+];
+
+function getSquadInfo(answers) {
+  return "{ \"squadId\" : \"" + answers.squadId + "\"}";
+};
+
+function getContactInfo(answers) {
+  return "{ \"name\" : \"" + answers.name + "\", \"phone\": \"" + answers.phone + "\"}";
+};
+
+function getLocationInfo(answers) {
+  return  "{ \"street\" : \"" + answers.street + "\"," +
+          "  \"city\" : \"" + answers.city + "\"," +
+          "  \"state\" : \"" + answers.state + "\"," +
+          "  \"zipCode\": \"" + answers.zipcode + "\"}";
+};
+
+function getScheduleInfo(answers) {
+  return  "{ \"repeatType\" : \"" + answers.repeatType + "\"," +
+          "  \"startDate\" : \"" + answers.startDate + "\"," +
+          "  \"endDate\" : \"" + answers.endDate + "\"," +
+          "  \"startTime\" : \"" + answers.startTime + "\"," +
+          "  \"endTime\": \"" + answers.endTime + "\"}";
+};
+
+////
+//// Change this to enable prompt
+////
+////
+var questions = squad_questions;
+var bodyFunc = getSquadInfo;
+////
+////
+////
+////
 
 inquirer.prompt(questions).then(function(answers) {
   console.log(JSON.stringify(answers, null, '  '));
   cmd_title = answers.cmd;
-  cmd_body = "{\"state\": \"" + answers.state + "\", \"msg\": \"" + answers.msg +"\"}";
+  cmd_body = bodyFunc(answers);
 
   let curlCmd = cmd_part1 + token + cmd_part2 + cmd_title + cmd_part3 + cmd_body + cmd_part4;
   console.log(curlCmd);
@@ -75,4 +195,3 @@ inquirer.prompt(questions).then(function(answers) {
 }).catch(function(err) {
   console.error(err);
 });
-// //http://enzolutions.com/articles/2014/09/08/how-to-create-an-interactive-command-in-node-js/

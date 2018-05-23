@@ -126,12 +126,19 @@
 
 
       <template id='template-input' is="dom-if" if="{{jobInputStatus}}">
-        <div class="card state-active layout horizontal " id="input-card">
-          <iron-icon icon="icons:record-voice-over" id="input-card-icon"></iron-icon>
-          <paper-spinner class="multi" active id="input-card-spinner"></paper-spinner>
-          <paper-input id="input-card-input" name="inputCard" label="{{inputCardLabel}}" value="{{inputCardValue}}" required></paper-input>
-        </div>
+          <iron-list id="input-list" items="[[displayInput]]" as="item">
+              <template id='x'>
+                <div>
+                  <div class="card state-active layout horizontal " id="input-card">
+                    <iron-icon icon="icons:record-voice-over" id="input-card-icon"></iron-icon>
+                    <paper-spinner class="multi" active id="input-card-spinner"></paper-spinner>
+                    <paper-input id=[[item.id]] name=[[item.name]] label=[[item.label]] value=[[item.value]] required></paper-input>
+                  </div>
+                </div>
+              </template>
+            </iron-list>
       </template>
+
 
       <template id='template-form' is="dom-if" if="{{showStatus}}">
         <div id="status" class="card">
@@ -147,7 +154,7 @@
           content-type="application/json">
           <form method="post" content-type="application/json" action="https://4s3eofq8j5.execute-api.us-west-2.amazonaws.com/dev/api/v1/job">
 
-            <div class="card state-confirmed layout horizontal" id="beca-create-job-done">
+            <div class="card state-confirmed layout horizontal" id="beca-create-job-submit">
               <iron-label> Ready to submit job </iron-label>
               <iron-icon icon="icons:thumb-up"></iron-icon>
               <paper-button class="green" on-tap="_submit">Submit</paper-button>
@@ -195,6 +202,14 @@
             type: String,
             value: "No errors"
           },
+          displayInput: {
+            type: Array,
+            notify: true,
+            value: function () {
+              return [
+              ]
+            }
+          },
           echoInput: {
             type: Array,
             notify: true,
@@ -229,16 +244,6 @@
             notify: true,
             value: false
           },
-          inputCardLabel: {
-            type: String,
-            notify: true,
-            value: ""
-          },
-          inputCardValue: {
-            type: String,
-            notify: true,
-            value: ""
-          }
         }
       }
 
@@ -251,10 +256,10 @@
 
       _handleEcho(e) {
         var payload = JSON.parse(e.detail.msg);
-        this._processCmd(e.detail.cmd, payload.value);
+        this._processCmd(e.detail.cmd, payload);
       }
 
-      _processCmd(cmd, value) {
+      _processCmd(cmd, values) {
 
         switch (cmd) {
           case "beca-create-job":
@@ -263,24 +268,16 @@
             localElement.className = 'card state-ready layout horizontal';
             break;
           case "beca-create-job-squad-id":
-          case "beca-create-job-contact-name":
-          case "beca-create-job-contact-phone":
-          case "beca-create-job-location-street":
-          case "beca-create-job-location-city":
-          case "beca-create-job-location-state":
-          case "beca-create-job-location-zipcode":
-          case "beca-create-job-schedule-repeat-type":
-          case "beca-create-job-schedule-start-date":
-          case "beca-create-job-schedule-end-date":
-          case "beca-create-job-schedule-start-time":
-          case "beca-create-job-schedule-end-time":
+          case "beca-create-job-contact":
+          case "beca-create-job-location":
+          case "beca-create-job-schedule":
+            this._saveInputData(cmd);
             this.set('jobInputStatus', true);
             this.set('isDone', false);
             this.set('showReady', false);
-            this._saveEchoInputData();
             break;
-          case "beca-create-job-done":
-            this._saveEchoInputData();
+          case "beca-create-job-submit":
+            this._saveInputData(cmd);
             this.set('showReady', false);
             this.set('jobInputStatus', false);
             this.set('isDone', true);
@@ -289,57 +286,75 @@
             console.log("Error: unknown command");
         }
 
-        switch (cmd) {
+        this._addToDisplayInput(cmd, values);
+      }
+
+      _addToDisplayInput(cmd, values) {
+          switch (cmd) {
           case "beca-create-job-squad-id":
-            this._addToEchoInput('squadId', 'Squad Id', value);
+            this.displayInput = []
+            this._setDisplayInput("squadId", "squadId", "Squad Id", values.squadId);
+            // TODO: this is temporarly
+            this._addToEchoInput("squadId", "Squad Id", values.squadId);
             break;
-          case "beca-create-job-contact-name":
-            this._addToEchoInput('name', 'Name', value);
+          case "beca-create-job-contact":
+            this.displayInput = []
+            this._setDisplayInput("name", "name", "Name", values.name);
+            this._setDisplayInput("phone", "phone", "Phone Number", values.phone);
+            // TODO: this is temporarly
+            this._addToEchoInput("name", "Name", values.name);
+            this._addToEchoInput("phone", "Phone Number", values.phone);
             break;
-          case "beca-create-job-contact-phone":
-            this._addToEchoInput('phone', 'Phone', value);
+          case "beca-create-job-location":
+            this.displayInput = []
+            this._setDisplayInput("street", "street", "Street", values.street);
+            this._setDisplayInput("city", "city", "City", values.city);
+            this._setDisplayInput("state", "state", "State", values.state);
+            this._setDisplayInput("zipCode", "zipCode", "Zip Code", values.zipCode);
+            // TODO: this is temporarly
+            this._addToEchoInput("street", "Street", values.street);
+            this._addToEchoInput("city", "City", values.city);
+            this._addToEchoInput("state", "State", values.state);
+            this._addToEchoInput("zipCode", "Zip Code", values.zipCode);
             break;
-          case "beca-create-job-location-street":
-            this._addToEchoInput('street', 'Street', value);
-            break;
-          case "beca-create-job-location-city":
-            this._addToEchoInput('city', 'City', value);
-            break;
-          case "beca-create-job-location-state":
-            this._addToEchoInput('state', 'State', value);
-            break;
-          case "beca-create-job-location-zipcode":
-            this._addToEchoInput('zipCode', 'Zipcode', value);
-            break;
-          case "beca-create-job-schedule-repeat-type":
-            this._addToEchoInput('repeatType', 'Repeat Type', value);
-            break;
-          case "beca-create-job-schedule-start-date":
-            this._addToEchoInput('startDate', 'Start Date', value);
-            break;
-          case "beca-create-job-schedule-end-date":
-            this._addToEchoInput('endDate', 'End Date', value);
-            break;
-          case "beca-create-job-schedule-start-time":
-            this._addToEchoInput('startTime', 'Start Time', value);
-            break;
-          case "beca-create-job-schedule-end-time":
-            this._addToEchoInput('endTime', 'End Time', value);
+          case "beca-create-job-schedule":
+          this.displayInput = []
+            this._setDisplayInput("repeatType", "repeatType", "Repeat Type", values.repeatType);
+            this._setDisplayInput("startDate", "startDate", "Start Date", values.startDate);
+            this._setDisplayInput("endDate", "endDate", "End Date", values.endDate);
+            this._setDisplayInput("startTime", "startTime", "Start Time", values.startTime);
+            this._setDisplayInput("endTime", "endTime", "End Time", values.endTime);
+            // TODO: this is temporarly
+            this._addToEchoInput("repeatType", "Repeat Type", values.repeatType);
+            this._addToEchoInput("startDate", "Start Date", values.startDate);
+            this._addToEchoInput("endDate", "End Date", values.endDate);
+            this._addToEchoInput("startTime", "Start Time", values.startTime);
+            this._addToEchoInput("endTime", "End Time", values.endTime);
             break;
         }
       }
 
-      _saveEchoInputData() {
-        let localElement = this.shadowRoot.querySelector('#input-card-input');
-        if (localElement) {
-          let targetElem = 'echoInput.' + this.idx + '.value'
-          this.set(targetElem, localElement.value);
-          console.log(targetElem);
-          console.log(localElement.label);
-          console.log(this.idx);
-          console.log(localElement.value);
-          console.log(this.echoInput);
-        }
+      _setDisplayInput(id, name, label, value) {
+        const elem = {
+          'id': id,
+          'name': name,
+          'label': label,
+          'value': value
+        };
+        this.push('displayInput', elem);
+      }
+
+      _saveInputData(cmd) {
+        // TODO: need to save before submiting
+          // const l = this.querySelector('#input-list');
+          // const localElement = l.shadowRoot.querySelectorAll('paper-input');
+        // this.displayInput.forEach(function(item) {
+        //   const localElement = this.shadowRoot.querySelector('#' + item.id);
+
+        //   if (localElement !== null) {
+        //     this._addToEchoInput(item.id, item.label, item.value);
+        //   }
+        // });
       }
 
       _addToEchoInput(id, label, value) {
@@ -358,10 +373,7 @@
             this.splice('echoInput', index, 1, );
           }
 
-          this.idx = index;
           this.push('echoInput', elem);
-          this.set('inputCardLabel', label);
-          this.set('inputCardValue', value);
 
           this.idx = this.echoInput.findIndex(function(item, i){
             return item.id === id;
@@ -429,6 +441,3 @@
     window.customElements.define(JobCreateEchoDisplay.is, JobCreateEchoDisplay);
   </script>
 </dom-module>
-
-//https://stackoverflow.com/questions/23230079/add-a-class-to-polymer-element //https://www.polymer-project.org/2.0/docs/devguide/events
-//https://www.polymer-project.org/2.0/start/toolbox/deploy
