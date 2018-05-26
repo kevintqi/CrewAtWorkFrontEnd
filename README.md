@@ -1,5 +1,8 @@
-To triiger a notification
+To register a token
 
 ```
-curl -X POST -H "Content-Type: application/json" -d '{"title":"ruben","body":"is working"}' https://us-central1-crewatworkfrontend.cloudfunctions.net/publishNotification/api/v1/action
+curl -X POST -H "Content-Type: application/json" -d '{"action":"enable","data": {"userId":"userIdVal","token":"tokenVal"}}'  http://localhost:5001/crewatworkfrontend/us-central1/assistantManagement
+```
+```
+validAction = ['enable', 'forceEnable', 'disable']
 ```

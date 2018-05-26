@@ -13,20 +13,34 @@ admin.initializeApp();
 const subscriber = new Subscriber(admin);
 const publisher = new Publisher(admin);
 exports.intentFulfillment = functions.https.onRequest((req, res) => {
-    subscriber.getTokens()
-    .then((tokens) => {
-        console.log(req.body.queryResult);
+    subscriber.getToken(req.body.userId)
+    .then((token) => {
+        console.log(req.body);
         const data = {
             title: req.body.queryResult.action,
             body: JSON.stringify(req.body.queryResult.parameters)
         }
-        return publisher.send(tokens, data);
+        return publisher.send(token, data);
     }).then(() => {
         return res.status(200).end();
     }).catch((err) => {
         console.log(err);
+        if (err.status === 200) {
+            return res.status(200).end();
+        }
         return res.json({
             'fulfillmentText': 'Oops! Something went wrong.'
         });
+    });
+});
+
+exports.assistantManagement = functions.https.onRequest((req, res) => {
+    subscriber.handleToken(req.body)
+    .then(() => {
+        return res.status(200).send().end();
+    })
+    .catch((err) => {
+        console.log(err);
+        return res.status(err.status).send(err).end();
     });
 });
