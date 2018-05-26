@@ -11,11 +11,14 @@ class Subscriber {
     }
 
     getToken(userId) {
+        if (!userId) {
+            return Promise.reject(ErrCode.TONEN_UNAVAILABLE);
+        }
         return this._getToken(userId).then((val) => {
             if (val) {
                 return val;
             }
-            throw ErrCode.TONEN_UNAVAILABLE;
+            return Promise.reject(ErrCode.TONEN_UNAVAILABLE);
         });
     }
 
@@ -24,7 +27,7 @@ class Subscriber {
         if (action) {
             return action(input.data);
         }
-        throw ErrCode.ACTION_INVALID;
+        return Promise.reject(ErrCode.ACTION_INVALID);
     }
 
     _getToken(userId) {
@@ -37,7 +40,7 @@ class Subscriber {
     _enableToken(data) {
         return this._getToken(data.userId).then((val) => {
             if (val) {
-                throw ErrCode.TOKEN_OVERWRITING;
+                return Promise.reject(ErrCode.TOKEN_OVERWRITING);
             }
             return this._forceEnableToken(data);
         });

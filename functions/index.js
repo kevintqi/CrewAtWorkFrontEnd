@@ -13,9 +13,10 @@ admin.initializeApp();
 const subscriber = new Subscriber(admin);
 const publisher = new Publisher(admin);
 exports.intentFulfillment = functions.https.onRequest((req, res) => {
+    console.log(req.headers);
+    console.log(req.body);
     subscriber.getToken(req.body.userId)
     .then((token) => {
-        console.log(req.body);
         const data = {
             title: req.body.queryResult.action,
             body: JSON.stringify(req.body.queryResult.parameters)
@@ -25,7 +26,7 @@ exports.intentFulfillment = functions.https.onRequest((req, res) => {
         return res.status(200).end();
     }).catch((err) => {
         console.log(err);
-        if (err.status === 200) {
+        if (err.statusCode === 200) {
             return res.status(200).end();
         }
         return res.json({
@@ -41,6 +42,6 @@ exports.assistantManagement = functions.https.onRequest((req, res) => {
     })
     .catch((err) => {
         console.log(err);
-        return res.status(err.status).send(err).end();
+        return res.status(err.statusCode).send(err.statusMessage).end();
     });
 });
