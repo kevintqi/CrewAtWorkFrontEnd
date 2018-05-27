@@ -4,7 +4,7 @@ var child;
 
 var cmd_part1 = "curl --header \"Authorization: key=AAAAYbAFsSY:APA91bFFN2uA_9N63AqHRpOk7_pv4ZL7VGcrVF9nBUr1b-Z2YzmIRCN6UNYCW_rxN-Nwt1tip_hi647QKHn1EzNMvdei4VrKmmqiTO5tzXeqkxeKqGOGLVKS_uQro9yhTxyETH15W_zg\"" +
 " --header \"Content-Type: application/json\" -d '{\"to\": \"";
-var token = "dz5NwnDM4m4:APA91bGULn2wfHtHHON_8zNumi2UX8Xdxus56rejbu0mXnIUe_rlNLez8DYURuGXvaT0PG322GuVjZnL0vNy0LGZH6SPHT8_Y4M3P0MnGNji3UVE-GgczjJxMipJ80uYugwacSYW-4tI\"";
+var token = "fLYFYJ_ZEZM:APA91bHL0Cq96qO4ob95Zr_6sQ83SL-3uzhhalUSWV01njphFAtWgDkxBMNffcHtilOO8PUwu3qhhj1YNNGwnL08EBE-3OqovZULbcTf77aV_38oIV76f8nk9hwZLjLdOoCbjuPdW3RY\"";
 var cmd_part2 = ", \"notification\": {\"title\": \"";
 var cmd_title = "card-waiting";
 var cmd_part3 = "\", \"body\": ";

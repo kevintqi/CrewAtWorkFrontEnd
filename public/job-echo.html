@@ -8,6 +8,7 @@
 <link rel="import" href="job-intro-echo-display.html">
 <link rel="import" href="job-list-echo-display.html">
 <link rel="import" href="job-create-echo-display.html">
+<link rel="import" href="beca-login.html">
 
 <dom-module id="job-echo">
   <template>
@@ -33,6 +34,8 @@
     <firebase-messaging id="messaging" token="{{token}}" on-message="_handleMessage">
     </firebase-messaging>
 
+    <beca-login></beca-login>
+
     <iron-pages
       selected="[[page]]"
       attr-for-selected="name"
@@ -45,6 +48,7 @@
     <div class="card">
       <p>Token:</p>
       <p>[[token]]</p>
+      <p> User: {{user}}</p>
     </div>
 
   </template>
@@ -59,9 +63,15 @@
             type: String,
             notify: true,
             value: "job-intro-echo-display"
+          },
+          user: {
+            type: String,
+            notify: true,
+            value: "none"
           }
         }
       }
+
 
       ready() {
         super.ready();
@@ -70,8 +80,22 @@
         }, (err) => {
           console.log('user subscribe failed :(', err);
         });
+
+        window.addEventListener('beca-login-user-update', e => {
+          this._handleUserUpdate(e.detail.userEmail)
+        });
       }
+
+      _handleUserUpdate(user) {
+        this.set('user', user);
+        console.log("new user: ", this.user);
+      }
+
       _handleMessage() {
+        if (this.user === 'none') {
+          console.log("ERROR: Need to login");
+          return;
+        }
         console.log(arguments);
         let cmd = arguments[1].message.notification.title;
         this._pageChange(cmd);

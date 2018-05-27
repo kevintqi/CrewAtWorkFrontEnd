@@ -1,0 +1,97 @@
+<link rel="import" href="bower_components/polymer/polymer-element.html">
+<link rel="import" href="bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="bower_components/polymerfire/firebase-auth.html">
+<link rel="import" href="bower_components/paper-button/paper-button.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="beca-login">
+  <template>
+
+    <style include="shared-styles iron-flex">
+      :host {
+          display: block;
+          padding: 10px;
+      }
+
+      .circle {
+        color:royalblue;
+      }
+    </style>
+
+    <firebase-auth
+      id="auth"
+      user="{{user}}"
+      status-known="{{statusKnown}}"
+      signed-in="{{signedIn}}"
+      provider="google">
+    </firebase-auth>
+
+    <div class="card">
+      <div class="circle layout horizontal">Sebeca</div>
+      <h3> Welcome to the Beca Echo Display</h3>
+      <div class="state-active layout horizontal">
+          <template is="dom-if" if="[[user]]">
+            <h3>User:  [[user.displayName]] ---  </h3>
+            <h4>Email: [[user.email]]</h4>
+          </template>
+          <paper-button raised on-tap="_login" hidden$="[[user]]"> Sign in </paper-button>
+          <paper-button raised on-tap="_logout" hidden$="[[!user]]"> Sign out </paper-button>
+          </div>
+    </div>
+
+
+  </template>
+
+  <script>
+
+    class BecaLogin extends Polymer.Element {
+      static get is() { return 'beca-login'; }
+      static properties() {
+        return {
+          user: {
+            type: Object,
+            notify: true,
+          },
+          statusKnown: {
+            type: Object
+          }
+        }
+      }
+
+      static get observers() {
+        return [
+          '_notifySignedIn(user)'
+        ];
+      }
+
+      _notifySignedIn(user) {
+        if(user) {
+          console.log("user notifySignedIn: ", user.email);
+          window.dispatchEvent(new CustomEvent('beca-login-user-update', {
+            detail: {'userEmail': user.email }}));
+        }
+      }
+
+      _login() {
+        return this.$.auth.signInWithPopup().then(function(response) {
+          window.dispatchEvent(new CustomEvent('beca-login-user-update', {
+            detail: {'userEmail': response.user.email }}));
+        }).catch(function(error) {
+          window.dispatchEvent(new CustomEvent('beca-login-user-update', {
+            detail: {'userEmail': 'none'}}));
+          console.error("Error SignIn: " , error);
+        });
+      }
+
+      _logout() {
+        this.set('user', null);
+        window.dispatchEvent(new CustomEvent('beca-login-user-update', {
+          detail: {'userEmail': 'none'}}));
+        this.$.auth.signOut();
+      }
+    }
+    window.customElements.define(BecaLogin.is, BecaLogin);
+
+    </script>
+  </script>
+</dom-module>
