@@ -2,6 +2,7 @@ const functions = require('firebase-functions');
 const admin = require("firebase-admin");
 const Subscriber = require('./src/subscriber')
 const Publisher = require('./src/publisher');
+const Invoker = require('./src/invoker');
 // const serviceAccount = require("./service-account.json");
 
 // admin.initializeApp({
@@ -12,6 +13,7 @@ admin.initializeApp();
 
 const subscriber = new Subscriber(admin);
 const publisher = new Publisher(admin);
+const invoker = new Invoker();
 exports.intentFulfillment = functions.https.onRequest((req, res) => {
     console.log(req.headers);
     console.log(req.body);
@@ -42,6 +44,15 @@ exports.assistantManagement = functions.https.onRequest((req, res) => {
     })
     .catch((err) => {
         console.log(err);
+        return res.status(err.statusCode).send(err.statusMessage).end();
+    });
+});
+
+exports.assistantInvocation = functions.https.onRequest((req, res) => {
+    invoker.send(req.body.event).then((data) => {
+        console.log(data);
+        return res.status(200).end();
+    }).catch((err) => {
         return res.status(err.statusCode).send(err.statusMessage).end();
     });
 });

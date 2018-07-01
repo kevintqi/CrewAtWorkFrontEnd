@@ -13,6 +13,13 @@ const ErrCode = {
             name: 'ACTION_INVALID'
         }
     },
+    INVOCATION_FAILURE: {
+        statusCode: 500,
+        statusMessage: {
+            code: 3,
+            name: 'INVOCATION_FAILURE'
+        }
+    },
     TONEN_UNAVAILABLE: {
         statusCode: 200,
         statusMessage: {
@@ -26,7 +33,7 @@ const ErrCode = {
             code: 11,
             name: 'TOKEN_OVERWRITING'
         }
-    },
+    }
 };
 
 module.exports = ErrCode;

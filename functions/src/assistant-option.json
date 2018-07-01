@@ -1,0 +1,9 @@
+{
+    "host": "api.dialogflow.com",
+    "path": "/api/query?v=20150910",
+    "method": "POST",
+    "headers": {
+        "Content-Type": "application/json",
+        "Authorization":"Bearer 3c222b47c744441e968ac91ae1bdc913"
+    }
+}
