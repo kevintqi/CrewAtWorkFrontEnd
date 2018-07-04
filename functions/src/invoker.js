@@ -4,9 +4,10 @@ const ErrCode = require('./errcode');
 
 class Invoker {
     constructor() {
-        this.requester = new Requester(options);
+        this.requester = Requester.newRequester(options);
     }
-    send(event) {
+    
+    trigger(event) {
         const dataStr = this._buildData(event);
         return this.requester.send(dataStr)
             .then((data) => {

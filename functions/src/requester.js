@@ -1,9 +1,14 @@
 const https = require('https');
 
 class Requester {
+    static newRequester(options) {
+        return new Requester(options);
+    }
+
     constructor(options) {
         this.options = options;
     }
+    
     send(data) {
         return new Promise((resolve, reject) => {
             const req = https.request(this.options, (res) => {

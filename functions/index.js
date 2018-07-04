@@ -49,7 +49,7 @@ exports.assistantManagement = functions.https.onRequest((req, res) => {
 });
 
 exports.assistantInvocation = functions.https.onRequest((req, res) => {
-    invoker.send(req.body.event).then((data) => {
+    invoker.trigger(req.body.event).then((data) => {
         console.log(data);
         return res.status(200).end();
     }).catch((err) => {
