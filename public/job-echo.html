@@ -1,14 +1,14 @@
 <link rel="import" href="bower_components/polymer/polymer-element.html">
-<link rel="import" href="shared-styles.html">
 <link rel="import" href="bower_components/polymerfire/firebase-messaging.html">
 <link rel="import" href="bower_components/polymerfire/polymerfire.html">
 <link rel="import" href="bower_components/polymerfire/firebase-app.html">
 <link rel="import" href="bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="shared-styles.html">
 
 <link rel="import" href="job-intro-echo-display.html">
 <link rel="import" href="job-list-echo-display.html">
 <link rel="import" href="job-create-echo-display.html">
-<link rel="import" href="beca-login.html">
+<link rel="import" href="aws-login.html">
 
 <dom-module id="job-echo">
   <template>
@@ -21,41 +21,39 @@
 
     <!-- IMPORTANT: The firebase-app element needs to appear before any
       other firebase-* elements -->
-    <firebase-app
-      id="firebase"
-      auth-domain="crewatworkfrontend.firebaseapp.com"
-      api-key="AIzaSyCLsg2gkWT_9b6TcUM5zP7cHPkF2yjYzyc"
-      database-url="https://crewatworkfrontend.firebaseio.com"
-      project-id="crewatworkfrontend" storage-bucket=""
-      messaging-sender-id="419564990758">
+    <firebase-app id="firebase" auth-domain="crewatworkfrontend.firebaseapp.com" api-key="AIzaSyCLsg2gkWT_9b6TcUM5zP7cHPkF2yjYzyc"
+      database-url="https://crewatworkfrontend.firebaseio.com" project-id="crewatworkfrontend" storage-bucket="" messaging-sender-id="419564990758">
     </firebase-app>
+
+    <iron-ajax id="becaSource" content-type="application/json" handle-as="json" on-response="_handleBecaResponse">
+    </iron-ajax>
 
 
     <firebase-messaging id="messaging" token="{{token}}" on-message="_handleMessage">
     </firebase-messaging>
 
-    <beca-login></beca-login>
+    <aws-login></aws-login>
 
-    <iron-pages
-      selected="[[page]]"
-      attr-for-selected="name"
-      fallback-selection="job-intro-echo-display">
-          <job-intro-echo-display name="job-intro-echo-display"></job-intro-echo-display>
-          <job-list-echo-display name="beca-list-jobs"></job-list-echo-display>
-          <job-create-echo-display name="beca-create-job"></job-create-echo-display>
+    <iron-pages selected="[[page]]" attr-for-selected="name" fallback-selection="job-intro-echo-display">
+      <job-intro-echo-display name="job-intro-echo-display"></job-intro-echo-display>
+      <job-list-echo-display name="beca-list-jobs"></job-list-echo-display>
+      <job-create-echo-display name="beca-create-job"></job-create-echo-display>
     </iron-pages>
 
     <div class="card">
       <p>Token:</p>
       <p>[[token]]</p>
-      <p> User: {{user}}</p>
+      <p> User: {{user.email}}</p>
+      <p> Role: {{user.role}}</p>
     </div>
 
   </template>
 
   <script>
     class JobEcho extends Polymer.Element {
-      static get is() { return 'job-echo'; }
+      static get is() {
+        return 'job-echo';
+      }
 
       static get properties() {
         return {
@@ -65,9 +63,11 @@
             value: "job-intro-echo-display"
           },
           user: {
-            type: String,
+            type: Object,
             notify: true,
-            value: "none"
+            value: function () {
+              return {};
+            }
           }
         }
       }
@@ -81,18 +81,25 @@
           console.log('user subscribe failed :(', err);
         });
 
-        window.addEventListener('beca-login-user-update', e => {
-          this._handleUserUpdate(e.detail.userEmail)
+        window.addEventListener('aws-login-user-update', e => {
+          this._handleUserUpdate(e.detail);
         });
       }
 
       _handleUserUpdate(user) {
         this.set('user', user);
-        console.log("new user: ", this.user);
+        console.log("new user <job-echo>: ", this.user.email);
+        console.log("new role <job-echo>: ", this.user.role);
+        if (this._isEmptyObject(user)) {
+          this._enableBeca(false);
+        } else {
+          this._enableBeca(true);
+          this._welcomeBeca();
+        }
       }
 
       _handleMessage() {
-        if (this.user === 'none') {
+        if (this._isEmptyObject(this.user)) {
           console.log("ERROR: Need to login");
           return;
         }
@@ -100,21 +107,77 @@
         let cmd = arguments[1].message.notification.title;
         this._pageChange(cmd);
         window.dispatchEvent(new CustomEvent('echo-msg', {
-          detail: {'cmd': cmd,
-          'msg': arguments[1].message.notification.body}}));
+          detail: {
+            'cmd': cmd,
+            'msg': arguments[1].message.notification.body
+          }
+        }));
+      }
+
+      _isEmptyObject(obj) {
+        for (var key in obj) {
+          if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            return false;
+          }
+        }
+        return true;
       }
 
       _pageChange(cmd) {
-        switch(cmd) {
+        switch (cmd) {
           case "beca-list-jobs":
           case "beca-create-job":
             this.page = cmd;
-          break;
+            break;
           default:
-          break;
+            break;
         }
       }
+
+      _handleBecaResponse(response) {
+        // this._normalize(response.detail.__data.response);
+      }
+
+      /**
+       ** @function _SendMessage
+       ** @param {boolean} true enable beca, false disable beca
+       **/
+      _enableBeca(option) {
+        let action = (option === true) ? "enable" : "disable";
+        var ajax = this.$.becaSource;
+        ajax.method = "post";
+
+        ajax.body = {
+          "action": action,
+          "data": {
+            "userId": this.user.email,
+            "role": this.user.role,
+            "token": this.token
+          }
+        };
+        ajax.url =
+          'https://us-central1-crewatworkfrontend.cloudfunctions.net/assistantManagement';
+        ajax.generateRequest();
+      }
+
+      _welcomeBeca() {
+        var ajax = this.$.becaSource;
+        ajax.method = "post";
+        ajax.body = {
+          "event": {
+            "name": "WELCOME",
+            "data": {
+              "userId": this.user.email,
+              "role": this.user.role
+            }
+          }
+        };
+        ajax.url =
+          'https://us-central1-crewatworkfrontend.cloudfunctions.net/assistantInvocation';
+        ajax.generateRequest();
+      }
+
     }
-      window.customElements.define(JobEcho.is, JobEcho);
-    </script>
-  </dom-module>
+    window.customElements.define(JobEcho.is, JobEcho);
+  </script>
+</dom-module>

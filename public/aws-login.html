@@ -1,0 +1,301 @@
+<link rel="import" href="bower_components/polymer/polymer-element.html">
+<link rel="import" href="bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="bower_components/iron-form/iron-form.html">
+<link rel="import" href="bower_components/iron-label/iron-label.html">
+<link rel="import" href="bower_components/paper-input/paper-input.html">
+<link rel="import" href="bower_components/paper-button/paper-button.html">
+<link rel="import" href="bower_components/paper-password-input/min-length-validator.html">
+<link rel="import" href="bower_components/paper-password-input/match-passwords-validator.html">
+<link rel="import" href="bower_components/paper-password-input/paper-password-input.html">
+<link rel="import" href="bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="shared-styles.html">
+
+
+<link rel="import" href="./aws-cognito-scripts.html">
+
+<dom-module id="aws-login">
+  <template>
+    <style include="shared-styles iron-flex">
+      :host {
+        display: block;
+        padding: 10px;
+      }
+
+      .circle {
+        color: royalblue;
+      }
+
+      .button-submit {
+        background-color: #4285f4;
+        color: #fff;
+        margin-top: 50px;
+        width: 100%;
+      }
+
+      iron-label {
+        color: black;
+        font-weight: bold;
+      }
+    </style>
+
+    <div class="card">
+      <div class="circle layout horizontal">Sebeca</div>
+      <h3> Welcome to the Beca Echo Display</h3>
+      <div class="state-active layout horizontal">
+        <template is="dom-if" if="[[user]]">
+          <h3>User: [[user.email]] </h3>
+        </template>
+        <paper-button raised on-tap="_login" hidden$="[[user]]"> Sign in </paper-button>
+        <paper-button raised on-tap="_logout" hidden$="[[!user]]"> Sign out </paper-button>
+      </div>
+
+
+      <div hidden={{hiddenLogin}}>
+        <iron-form id="form" on-iron-form-response="_handleFormSubmit" on-iron-form-presubmit="_presubmit" content-type="application/json">
+          <form content-type="application/json">
+
+            <br>
+            <iron-label> User Name (email) </iron-label>
+            <paper-input id="userName" label="Name" required autocomplete="name"></paper-input>
+
+            <br>
+            <iron-label> Password </iron-label>
+            <min-length-validator id="min-length-validator" min-length="6"></min-length-validator>
+            <paper-password-input id="password" auto-validate validator="min-length-validator" label="Password" error-message="Enter at least 6 characters">
+            </paper-password-input>
+
+            <paper-button class="button-submit" on-tap="_submit">Submit</paper-button>
+          </form>
+        </iron-form>
+      </div>
+    </div>
+
+    <!-- <pre>[[response]]</pre> -->
+
+    <paper-dialog id="changePassDialog">
+      <iron-form id="changeForm" on-iron-form-response="_HandleFormChangePasswSubmit">
+        <form>
+          <iron-label> Please enter the following information </iron-label>
+          <paper-input id="cpName" label="Name" required autocomplete="name"></paper-input>
+          <paper-input id="cpGender" label="Gender" required autocomplete="gender"></paper-input>
+          <paper-input id="cpPicture" label="Picture URL" required autocomplete="picture"></paper-input>
+          <paper-input id="cpRole" label="Role" required autocomplete="role"></paper-input>
+
+              <match-passwords-validator id="match-passwords-validator" password="[[password]]"></match-passwords-validator>
+              <paper-password-input id="cpPassword" label="Password" value="{{password}}" required></paper-password-input>
+              <paper-password-input label="Confirm" auto-validate validator="match-passwords-validator" error-message="Passwords need to match" required>
+              </paper-password-input>
+
+          <paper-button class="button-submit" on-tap="_submitChangePassw">Done</paper-button>
+        </form>
+      </iron-form>
+    </paper-dialog>
+
+
+  </template>
+  <script>
+    class AwsLogin extends Polymer.Element {
+      static get is() {
+        return 'aws-login';
+      }
+
+      constructor() {
+        super();
+        this.user = null;
+      }
+
+
+      static get properties() {
+        return {
+          user: {
+            type: Object,
+            notify: true,
+            value: function() { return {}; }
+          },
+          hiddenLogin: {
+            type: Boolean,
+            value: true
+          },
+          confirmPasswData: {
+            type: Object,
+            notify: true,
+            value: function() { return {}; }
+          }
+        }
+      }
+      ready() {
+        super.ready();
+      }
+
+      static get observers() {
+        return [
+          '_notifySignedIn(user)'
+        ];
+      }
+
+      _notifySignedIn(user) {
+        if (!this._isEmptyObject(user)) {
+          console.log("user notifySignedIn: ", user.email);
+          window.dispatchEvent(new CustomEvent('aws-login-user-update', {
+            detail: {
+              'email':  user.email,
+              'role': user.role
+            }
+          }));
+        }
+      }
+
+      _submitChangePassw() {
+        this.$.changeForm.submit();
+      }
+
+      _HandleFormChangePasswSubmit() {
+        this.confirmPasswData.name = this.$.changeForm.querySelector("#cpName").value;
+        this.confirmPasswData.gender = this.$.changeForm.querySelector("#cpGender").value;
+        this.confirmPasswData.picture = this.$.changeForm.querySelector("#cpPicture").value;
+        this.confirmPasswData.role = this.$.changeForm.querySelector("#cpRole").value;
+        this.confirmPasswData.password = this.$.changeForm.querySelector("#cpPassword").value;
+        this.$.changePassDialog.close();
+      }
+
+      _login() {
+        this.$.form.reset();
+        this.$.changeForm.reset();
+        this.hiddenLogin = false;
+      }
+
+      _logout() {
+        this.set('user', null);
+        window.dispatchEvent(new CustomEvent('aws-login-user-update', {
+          detail: {}
+        }));
+        this.hiddenLogin = true;
+      }
+
+      _presubmit() {}
+
+      _submit() {
+        this.$.form.submit();
+      }
+
+      _handleFormSubmit(e) {
+        let userName = this.$.form.querySelector('#userName').value;
+        let password = this.$.form.querySelector('#password').value;
+
+        var authenticationData = {
+          Username: userName,
+          Password: password,
+        };
+        var authenticationDetails = new AWSCognito.CognitoIdentityServiceProvider.AuthenticationDetails(
+          authenticationData);
+        var poolData = {
+          UserPoolId: 'us-west-2_uvLRuYLaz', // Your user pool id here
+          ClientId: '7jfn70bhrbchfn5flmbs96nga4' // Your client id here
+        };
+        var userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
+        var userData = {
+          Username: userName,
+          Pool: userPool
+        };
+        var cognitoUser = new AWSCognito.CognitoIdentityServiceProvider.CognitoUser(userData);
+
+        var lThis = this;
+
+        cognitoUser.authenticateUser(authenticationDetails, {
+          onSuccess: function (result) {
+            console.log('access token + ' + result.getAccessToken().getJwtToken());
+            // alert(result.getAccessToken().getJwtToken());
+
+            //POTENTIAL: Region needs to be set if not already set previously elsewhere.
+            AWS.config.region = 'us-west-2';
+
+            AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+              IdentityPoolId: 'us-west-2:0b32af78-187b-4a2b-ae05-8fc4c1727f73', // your identity pool id here
+              Logins: {
+                // Change the key below according to the specific region your user pool is in.
+                'cognito-idp.us-west-2.amazonaws.com/us-west-2_uvLRuYLaz': result.getIdToken().getJwtToken()
+              }
+            });
+
+            // refreshes credentials using AWS.CognitoIdentity.getCredentialsForIdentity()
+            AWS.config.credentials.refresh((error) => {
+              if (error) {
+                console.error(error);
+              } else {
+                // Instantiate aws sdk service objects now that the credentials have been updated.
+                // example: var s3 = new AWS.S3();
+                console.log('Successfully logged!');
+
+                cognitoUser.getUserAttributes(function (err, result) {
+                  if (err) {
+                    alert(err);
+                    return;
+                  }
+
+                  let role;
+                  for (let i = 0; i < result.length; i++) {
+                    console.log('attribute ' + result[i].getName() + ' has value ' + result[i].getValue());
+                    if (result[i].getName() === "custom:company_role") {
+                      role = result[i].getValue();
+                    }
+                  }
+
+                  lThis.user = {
+                    'email': userName,
+                    'role': role
+                  };
+                });
+
+                lThis.hiddenLogin = true;
+                alert("Successfully logged!");
+              }
+            });
+          },
+
+          onFailure: function (err) {
+            alert(err);
+          },
+          mfaRequired: function (codeDeliveryDetails) {
+            // MFA is required to complete user authentication.
+            // Get the code from user and call:
+            cognitoUser.sendMFACode(mfaCode, this)
+          },
+
+          newPasswordRequired: function (userAttributes, requiredAttributes) {
+            // TODO: lechDev need to determine how to call this function instead of prompt()
+              // lThis.$.changePassDialog.open();
+
+            // the api doesn't accept this field back
+            delete userAttributes.email_verified;
+            delete userAttributes.phone_number_verified;
+            // TODO: lechDev don't delete
+            // userAttributes.name = lThis.confirmPasswData.name;
+            // userAttributes.gender = lThis.confirmPasswData.gender;
+            // userAttributes.picture = lThis.confirmPasswData.picture;
+            // userAttributes["custom:company_role"] = lThis.confirmPasswData.role;
+            // cognitoUser.completeNewPasswordChallenge(lThis.confirmPasswData.password, userAttributes, this);
+
+            userAttributes.name = prompt("Please enter your name:");
+            userAttributes.gender = prompt("Please enter your gender");
+            userAttributes.picture = prompt("Please enter the picture url");
+            userAttributes["custom:company_role"] = prompt("Please enter your role");
+            let newPassword = prompt("Please enter your new password:")
+            cognitoUser.completeNewPasswordChallenge(newPassword, userAttributes, this);
+          }
+
+        });
+      }
+
+      _isEmptyObject(obj) {
+        for (var key in obj) {
+          if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            return false;
+          }
+        }
+        return true;
+      }
+    }
+    window.customElements.define(AwsLogin.is, AwsLogin);
+  </script>
+</dom-module>
