@@ -1,5 +1,6 @@
 const functions = require('firebase-functions');
 const admin = require("firebase-admin");
+const corsProxy = require('./src/corsproxy');
 const Subscriber = require('./src/subscriber')
 const Publisher = require('./src/publisher');
 const Invoker = require('./src/invoker');
@@ -38,21 +39,26 @@ exports.intentFulfillment = functions.https.onRequest((req, res) => {
 });
 
 exports.assistantManagement = functions.https.onRequest((req, res) => {
-    subscriber.handleToken(req.body)
-    .then(() => {
-        return res.status(200).send().end();
-    })
-    .catch((err) => {
-        console.log(err);
-        return res.status(err.statusCode).send(err.statusMessage).end();
+    corsProxy(req, res, () => {    
+        console.log(req.body);
+        subscriber.handleToken(req.body)
+        .then(() => {
+            return res.status(200).send().end();
+        })
+        .catch((err) => {
+            console.log(err);
+            return res.status(err.statusCode).send(err.statusMessage).end();
+        });
     });
 });
 
 exports.assistantInvocation = functions.https.onRequest((req, res) => {
-    invoker.trigger(req.body.event).then((data) => {
-        console.log(data);
-        return res.status(200).end();
-    }).catch((err) => {
-        return res.status(err.statusCode).send(err.statusMessage).end();
+    corsProxy(req, res, () => {
+        invoker.trigger(req.body.event).then((data) => {
+            console.log(data);
+            return res.status(200).end();
+        }).catch((err) => {
+            return res.status(err.statusCode).send(err.statusMessage).end();
+        });
     });
 });
