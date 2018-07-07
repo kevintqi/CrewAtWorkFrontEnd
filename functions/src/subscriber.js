@@ -1,4 +1,6 @@
 const ErrCode = require('./errcode');
+const btoa = require('btoa');
+
 class Subscriber {
     constructor(admin) {
         this.database = admin.database();
@@ -30,7 +32,8 @@ class Subscriber {
         return Promise.reject(ErrCode.ACTION_INVALID);
     }
 
-    _getToken(userId) {
+    _getToken(userIdStr) {
+        const userId = btoa(userIdStr);
         return this.database.ref(`${this.subscriberKey}/${userId}`).once('value')
             .then((snapshot) => {
                 return snapshot.val();
@@ -47,11 +50,13 @@ class Subscriber {
     }
 
     _forceEnableToken(data) {
-        return this.database.ref(`${this.subscriberKey}/${data.userId}/`).set(data.token);
+        const userId = btoa(data.userId);
+        return this.database.ref(`${this.subscriberKey}/${userId}/`).set(data.token);
     }
 
     _disableToken(data) {
-        return this.database.ref(`${this.subscriberKey}/${data.userId}/`).remove();
+        const userId = btoa(data.userId);
+        return this.database.ref(`${this.subscriberKey}/${userId}/`).remove();
     }
 }
 
