@@ -1,15 +1,15 @@
-<link rel="import" href="bower_components/polymer/polymer-element.html">
-<link rel="import" href="bower_components/iron-flex-layout/iron-flex-layout.html">
-<link rel="import" href="bower_components/iron-flex-layout/iron-flex-layout-classes.html">
-<link rel="import" href="bower_components/iron-form/iron-form.html">
-<link rel="import" href="bower_components/iron-label/iron-label.html">
-<link rel="import" href="bower_components/paper-input/paper-input.html">
-<link rel="import" href="bower_components/paper-button/paper-button.html">
-<link rel="import" href="bower_components/paper-password-input/min-length-validator.html">
-<link rel="import" href="bower_components/paper-password-input/match-passwords-validator.html">
-<link rel="import" href="bower_components/paper-password-input/paper-password-input.html">
-<link rel="import" href="bower_components/paper-dialog/paper-dialog.html">
-<link rel="import" href="shared-styles.html">
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../bower_components/iron-form/iron-form.html">
+<link rel="import" href="../bower_components/iron-label/iron-label.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-password-input/min-length-validator.html">
+<link rel="import" href="../bower_components/paper-password-input/match-passwords-validator.html">
+<link rel="import" href="../bower_components/paper-password-input/paper-password-input.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../config/shared-styles.html">
 
 
 <link rel="import" href="./aws-cognito-scripts.html">
@@ -65,33 +65,11 @@
             <paper-password-input id="password" auto-validate validator="min-length-validator" label="Password" error-message="Enter at least 6 characters">
             </paper-password-input>
 
-            <paper-button class="button-submit" on-tap="_submit">Submit</paper-button>
+            <paper-button id="submitButton" class="button-submit" on-tap="_submit">Submit</paper-button>
           </form>
         </iron-form>
       </div>
     </div>
-
-    <!-- <pre>[[response]]</pre> -->
-
-    <paper-dialog id="changePassDialog">
-      <iron-form id="changeForm" on-iron-form-response="_HandleFormChangePasswSubmit">
-        <form>
-          <iron-label> Please enter the following information </iron-label>
-          <paper-input id="cpName" label="Name" required autocomplete="name"></paper-input>
-          <paper-input id="cpGender" label="Gender" required autocomplete="gender"></paper-input>
-          <paper-input id="cpPicture" label="Picture URL" required autocomplete="picture"></paper-input>
-          <paper-input id="cpRole" label="Role" required autocomplete="role"></paper-input>
-
-              <match-passwords-validator id="match-passwords-validator" password="[[password]]"></match-passwords-validator>
-              <paper-password-input id="cpPassword" label="Password" value="{{password}}" required></paper-password-input>
-              <paper-password-input label="Confirm" auto-validate validator="match-passwords-validator" error-message="Passwords need to match" required>
-              </paper-password-input>
-
-          <paper-button class="button-submit" on-tap="_submitChangePassw">Done</paper-button>
-        </form>
-      </iron-form>
-    </paper-dialog>
-
 
   </template>
   <script>
@@ -140,28 +118,17 @@
           window.dispatchEvent(new CustomEvent('aws-login-user-update', {
             detail: {
               'email':  user.email,
-              'role': user.role
+              'role': user.role,
+              'userPoolId': user.userPoolId,
+              'userIdToken': user.userIdToken
             }
           }));
         }
       }
 
-      _submitChangePassw() {
-        this.$.changeForm.submit();
-      }
-
-      _HandleFormChangePasswSubmit() {
-        this.confirmPasswData.name = this.$.changeForm.querySelector("#cpName").value;
-        this.confirmPasswData.gender = this.$.changeForm.querySelector("#cpGender").value;
-        this.confirmPasswData.picture = this.$.changeForm.querySelector("#cpPicture").value;
-        this.confirmPasswData.role = this.$.changeForm.querySelector("#cpRole").value;
-        this.confirmPasswData.password = this.$.changeForm.querySelector("#cpPassword").value;
-        this.$.changePassDialog.close();
-      }
-
       _login() {
         this.$.form.reset();
-        this.$.changeForm.reset();
+        // this.$.changeForm.reset();
         this.hiddenLogin = false;
       }
 
@@ -176,6 +143,8 @@
       _presubmit() {}
 
       _submit() {
+        let button = this.shadowRoot.querySelector('#submitButton');
+        button.textContent = 'Processing ..';
         this.$.form.submit();
       }
 
@@ -204,7 +173,10 @@
 
         cognitoUser.authenticateUser(authenticationDetails, {
           onSuccess: function (result) {
-            console.log('access token + ' + result.getAccessToken().getJwtToken());
+            console.log('id token + ' + result.getIdToken().getJwtToken());
+            var userPoolId =  'us-west-2_uvLRuYLaz';
+            var userIdToken = result.getIdToken().getJwtToken()
+
             // alert(result.getAccessToken().getJwtToken());
 
             //POTENTIAL: Region needs to be set if not already set previously elsewhere.
@@ -243,7 +215,9 @@
 
                   lThis.user = {
                     'email': userName,
-                    'role': role
+                    'role': role,
+                    'userPoolId': userPoolId,
+                    'userIdToken': userIdToken
                   };
                 });
 
@@ -263,18 +237,9 @@
           },
 
           newPasswordRequired: function (userAttributes, requiredAttributes) {
-            // TODO: lechDev need to determine how to call this function instead of prompt()
-              // lThis.$.changePassDialog.open();
-
             // the api doesn't accept this field back
             delete userAttributes.email_verified;
             delete userAttributes.phone_number_verified;
-            // TODO: lechDev don't delete
-            // userAttributes.name = lThis.confirmPasswData.name;
-            // userAttributes.gender = lThis.confirmPasswData.gender;
-            // userAttributes.picture = lThis.confirmPasswData.picture;
-            // userAttributes["custom:company_role"] = lThis.confirmPasswData.role;
-            // cognitoUser.completeNewPasswordChallenge(lThis.confirmPasswData.password, userAttributes, this);
 
             userAttributes.name = prompt("Please enter your name:");
             userAttributes.gender = prompt("Please enter your gender");

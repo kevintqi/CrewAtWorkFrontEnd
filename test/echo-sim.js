@@ -4,7 +4,7 @@ var child;
 
 var cmd_part1 = "curl --header \"Authorization: key=AAAAYbAFsSY:APA91bFFN2uA_9N63AqHRpOk7_pv4ZL7VGcrVF9nBUr1b-Z2YzmIRCN6UNYCW_rxN-Nwt1tip_hi647QKHn1EzNMvdei4VrKmmqiTO5tzXeqkxeKqGOGLVKS_uQro9yhTxyETH15W_zg\"" +
 " --header \"Content-Type: application/json\" -d '{\"to\": \"";
-var token = "fLYFYJ_ZEZM:APA91bHL0Cq96qO4ob95Zr_6sQ83SL-3uzhhalUSWV01njphFAtWgDkxBMNffcHtilOO8PUwu3qhhj1YNNGwnL08EBE-3OqovZULbcTf77aV_38oIV76f8nk9hwZLjLdOoCbjuPdW3RY\"";
+var token = "fm2CLLGObP0:APA91bHssHifTFaPH3DG2I97qGtxHAxAr4o9S2_oH9l_CO-eiIJuh8BE9LB7j1PjMeYA7bc1W9VyXY7ofUVK_WmlAO5BMo_MBdXrKauBPHfpX6YWQzSFcojdTCw6AHH232z60A3a3XJ9\"";
 var cmd_part2 = ", \"notification\": {\"title\": \"";
 var cmd_title = "card-waiting";
 var cmd_part3 = "\", \"body\": ";
@@ -30,7 +30,7 @@ var squad_questions = [
     type: 'input',
     name: 'squadId',
     message: 'Please enter the squad Id',
-    default: 's78999'
+    default: '111'
   }
 ];
 
@@ -171,7 +171,7 @@ function getScheduleInfo(answers) {
 //// Change this to enable prompt
 ////
 ////
-var questions = squad_questions;
+var questions = schedule_questions;
 var bodyFunc = getSquadInfo;
 ////
 ////

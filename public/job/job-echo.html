@@ -1,14 +1,14 @@
-<link rel="import" href="bower_components/polymer/polymer-element.html">
-<link rel="import" href="bower_components/polymerfire/firebase-messaging.html">
-<link rel="import" href="bower_components/polymerfire/polymerfire.html">
-<link rel="import" href="bower_components/polymerfire/firebase-app.html">
-<link rel="import" href="bower_components/iron-pages/iron-pages.html">
-<link rel="import" href="shared-styles.html">
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-messaging.html">
+<link rel="import" href="../bower_components/polymerfire/polymerfire.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-app.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../config/shared-styles.html">
 
-<link rel="import" href="job-intro-echo-display.html">
+<link rel="import" href="empty-echo-display.html">
 <link rel="import" href="job-list-echo-display.html">
 <link rel="import" href="job-create-echo-display.html">
-<link rel="import" href="aws-login.html">
+<link rel="import" href="../login/aws-login.html">
 
 <dom-module id="job-echo">
   <template>
@@ -34,10 +34,10 @@
 
     <aws-login></aws-login>
 
-    <iron-pages selected="[[page]]" attr-for-selected="name" fallback-selection="job-intro-echo-display">
-      <job-intro-echo-display name="job-intro-echo-display"></job-intro-echo-display>
-      <job-list-echo-display name="beca-list-jobs"></job-list-echo-display>
-      <job-create-echo-display name="beca-create-job"></job-create-echo-display>
+    <iron-pages selected="[[page]]" attr-for-selected="name" fallback-selection="empty-echo-display">
+      <empty-echo-display name="empty-echo-display"></empty-echo-display>
+      <job-list-echo-display name="beca-list-jobs" user={{user}}></job-list-echo-display>
+      <job-create-echo-display name="beca-create-job" user={{user}}></job-create-echo-display>
     </iron-pages>
 
     <div class="card">
@@ -45,6 +45,8 @@
       <p>[[token]]</p>
       <p> User: {{user.email}}</p>
       <p> Role: {{user.role}}</p>
+      <p> User-Pool-Id: {{user.userPoolId}}</p>
+      <p> User-Id-Token: {{user.userIdToken}}</p>
     </div>
 
   </template>
@@ -60,7 +62,7 @@
           page: {
             type: String,
             notify: true,
-            value: "job-intro-echo-display"
+            value: "empty-echo-display"
           },
           user: {
             type: Object,
@@ -90,6 +92,8 @@
         this.set('user', user);
         console.log("new user <job-echo>: ", this.user.email);
         console.log("new role <job-echo>: ", this.user.role);
+        console.log("new userPoolId <job-echo>: ", this.user.userPoolId);
+        console.log("new userIdToken <job-echo>: ", this.user.userIdToken);
         if (this._isEmptyObject(user)) {
           this._enableBeca(false);
         } else {

@@ -1,14 +1,13 @@
-<link rel="import" href="bower_components/polymer/polymer-element.html">
-<link rel="import" href="/bower_components/polymer/lib/utils/flattened-nodes-observer.html">
-<link rel="import" href="bower_components/iron-flex-layout/iron-flex-layout-classes.html">
-<link rel="import" href="bower_components/iron-ajax/iron-ajax.html">
-<link rel="import" href="bower_components/vaadin-grid/all-imports.html">
-<link rel="import" href="bower_components/iron-icon/iron-icon.html">
-<link rel="import" href="bower_components/iron-icons/iron-icons.html">
-<link rel="import" href="bower_components/iron-icons/av-icons.html">
-<link rel="import" href="bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/vaadin-grid/all-imports.html">
+<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/iron-icons/av-icons.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
 
-<link rel="import" href="shared-styles.html">
+<link rel="import" href="../config/shared-styles.html">
 
 <dom-module id="job-list-echo-display">
   <template>
@@ -126,7 +125,7 @@
           <vaadin-grid-column>
             <template class="header">
               <h4>Street</h4>
-            </template>
+            </template>jobs
             <template>
               <span class="wrap">
                 [[item.location.street]]
@@ -205,14 +204,17 @@
 
       static get properties() {
         return {
+          user: {
+            type: Object,
+            notify: true,
+            value: function () {
+              return {};
+            }
+          },
           loading: {
             type: Boolean,
             notify: true,
             value: true
-          },
-          squadIdStr: {
-            type: String,
-            value: ""
           }
         }
       }
@@ -220,9 +222,6 @@
       ready() {
         super.ready();
         window.addEventListener('echo-msg', e => { this._handleEcho(e)});
-        // Polymer.RenderStatus.afterNextRender(this, function () {
-        //   this._getJobs();
-        // });
       }
 
       _handleEcho(e) {
@@ -230,10 +229,10 @@
         var payload = JSON.parse(e.detail.msg);
         console.log(e.detail.cmd);
         console.log(e.detail.msg);
-        this._processCmd(e.detail.cmd, payload.squad);
+        this._processCmd(e.detail.cmd);
       }
 
-      _processCmd(cmd, squad) {
+      _processCmd(cmd) {
         switch (cmd) {
           case "beca-list-jobs":
             this.$['label-waiting'].innerHTML = '<h3> Ready for Input (list jobs) </h3>';
@@ -243,7 +242,6 @@
             this.showSpinner = true;
             break;
           case "beca-list-jobs-specify-squad":
-            this.squadIdStr = squad;
             this._getJobs();
             break;
           default:
@@ -254,7 +252,9 @@
       _getJobs() {
         var ajax = this.$.awsSource;
         ajax.url =
-          'https://4s3eofq8j5.execute-api.us-west-2.amazonaws.com/dev/api/v1/job?squadId=' + this.squadIdStr;
+          'https://4s3eofq8j5.execute-api.us-west-2.amazonaws.com/dev/api/v1/job';
+        ajax.headers['authorization'] = 'Bearer ' + this.user.userIdToken;
+        ajax.headers['user-pool-id'] = '' + this.user.userPoolId;
         ajax.generateRequest();
       }
 

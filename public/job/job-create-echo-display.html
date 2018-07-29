@@ -1,19 +1,19 @@
-<link rel="import" href="bower_components/polymer/polymer-element.html">
-<link rel="import" href="bower_components/iron-flex-layout/iron-flex-layout-classes.html">
-<link rel="import" href="bower_components/iron-ajax/iron-ajax.html">
-<link rel="import" href="bower_components/iron-icon/iron-icon.html">
-<link rel="import" href="bower_components/iron-icons/iron-icons.html">
-<link rel="import" href="bower_components/iron-icons/av-icons.html">
-<link rel="import" href="bower_components/paper-spinner/paper-spinner.html">
-<link rel="import" href="bower_components/paper-input/paper-input.html">
-<link rel="import" href="bower_components/paper-button/paper-button.html">
-<link rel="import" href="bower_components/polymerfire/firebase-app.html">
-<link rel="import" href="bower_components/polymerfire/firebase.html">
-<link rel="import" href="bower_components/iron-form/iron-form.html">
-<link rel="import" href="bower_components/iron-list/iron-list.html">
-<link rel="import" href="bower_components/iron-label/iron-label.html">
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/iron-icons/av-icons.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-app.html">
+<link rel="import" href="../bower_components/polymerfire/firebase.html">
+<link rel="import" href="../bower_components/iron-form/iron-form.html">
+<link rel="import" href="../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../bower_components/iron-label/iron-label.html">
 
-<link rel="import" href="shared-styles.html">
+<link rel="import" href="../config/shared-styles.html">
 
 <dom-module id="job-create-echo-display">
   <template>
@@ -122,17 +122,17 @@
 
 
       <template id='template-input' is="dom-if" if="{{jobInputStatus}}">
-          <iron-list id="input-list" items="[[displayInput]]" as="item">
-              <template id='x'>
-                <div>
-                  <div class="card state-active layout horizontal " id="input-card">
-                    <iron-icon icon="icons:record-voice-over" id="input-card-icon"></iron-icon>
-                    <paper-spinner class="multi" active id="input-card-spinner"></paper-spinner>
-                    <paper-input id=[[item.id]] name=[[item.name]] label=[[item.label]] value=[[item.value]] required></paper-input>
-                  </div>
-                </div>
-              </template>
-            </iron-list>
+        <iron-list id="input-list" items="[[displayInput]]" as="item">
+          <template id='x'>
+            <div>
+              <div class="card state-active layout horizontal " id="input-card">
+                <iron-icon icon="icons:record-voice-over" id="input-card-icon"></iron-icon>
+                <paper-spinner class="multi" active id="input-card-spinner"></paper-spinner>
+                <paper-input id=[[item.id]] name=[[item.name]] label=[[item.label]] value=[[item.value]] required></paper-input>
+              </div>
+            </div>
+          </template>
+        </iron-list>
       </template>
 
 
@@ -148,14 +148,13 @@
       <template id='template-form' is="dom-if" if="{{isDone}}">
         <iron-form id="form" on-iron-form-response="_handleFormSubmit" on-iron-form-error="_handleError" on-iron-form-presubmit="_presubmit"
           content-type="application/json">
-          <form method="post" content-type="application/json" action="https://4s3eofq8j5.execute-api.us-west-2.amazonaws.com/dev/api/v1/job">
 
+          <form method="post" content-type="application/json" action="https://4s3eofq8j5.execute-api.us-west-2.amazonaws.com/dev/api/v1/job">
             <div class="card state-confirmed layout horizontal" id="beca-create-job-submit">
               <iron-label> Ready to submit job </iron-label>
               <iron-icon icon="icons:thumb-up"></iron-icon>
-              <paper-button class="green" on-tap="_submit">Submit</paper-button>
+              <paper-button id="submitButton" class="green" on-tap="_submit">Submit</paper-button>
             </div>
-
           </form>
         </iron-form>
       </template>
@@ -179,7 +178,6 @@
       </div>
 
     </div>
-
   </template>
 
   <script>
@@ -190,6 +188,13 @@
 
       static get properties() {
         return {
+          user: {
+            type: Object,
+            notify: true,
+            value: function () {
+              return {};
+            }
+          },
           response: {
             type: String,
             value: "none"
@@ -263,17 +268,15 @@
             let localElement = this.shadowRoot.querySelector('#beca-create-job');
             localElement.className = 'card state-ready layout horizontal';
             break;
-          case "beca-create-job-squad-id":
+          // case "beca-create-job-squad-id":
           case "beca-create-job-contact":
           case "beca-create-job-location":
           case "beca-create-job-schedule":
-            this._saveInputData(cmd);
             this.set('jobInputStatus', true);
             this.set('isDone', false);
             this.set('showReady', false);
             break;
           case "beca-create-job-submit":
-            this._saveInputData(cmd);
             this.set('showReady', false);
             this.set('jobInputStatus', false);
             this.set('isDone', true);
@@ -287,17 +290,10 @@
 
       _addToDisplayInput(cmd, values) {
           switch (cmd) {
-          case "beca-create-job-squad-id":
-            this.displayInput = []
-            this._setDisplayInput("squadId", "squadId", "Squad Id", values.squadId);
-            // TODO: this is temporarly
-            this._addToEchoInput("squadId", "Squad Id", values.squadId);
-            break;
           case "beca-create-job-contact":
             this.displayInput = []
             this._setDisplayInput("name", "name", "Name", values.name);
             this._setDisplayInput("phone", "phone", "Phone Number", values.phone);
-            // TODO: this is temporarly
             this._addToEchoInput("name", "Name", values.name);
             this._addToEchoInput("phone", "Phone Number", values.phone);
             break;
@@ -307,7 +303,6 @@
             this._setDisplayInput("city", "city", "City", values.city);
             this._setDisplayInput("state", "state", "State", values.state);
             this._setDisplayInput("zipCode", "zipCode", "Zip Code", values.zipCode);
-            // TODO: this is temporarly
             this._addToEchoInput("street", "Street", values.street);
             this._addToEchoInput("city", "City", values.city);
             this._addToEchoInput("state", "State", values.state);
@@ -320,7 +315,6 @@
             this._setDisplayInput("endDate", "endDate", "End Date", values.endDate);
             this._setDisplayInput("startTime", "startTime", "Start Time", values.startTime);
             this._setDisplayInput("endTime", "endTime", "End Time", values.endTime);
-            // TODO: this is temporarly
             this._addToEchoInput("repeatType", "Repeat Type", values.repeatType);
             this._addToEchoInput("startDate", "Start Date", values.startDate);
             this._addToEchoInput("endDate", "End Date", values.endDate);
@@ -337,20 +331,8 @@
           'label': label,
           'value': value
         };
+
         this.push('displayInput', elem);
-      }
-
-      _saveInputData(cmd) {
-        // TODO: need to save before submiting
-          // const l = this.querySelector('#input-list');
-          // const localElement = l.shadowRoot.querySelectorAll('paper-input');
-        // this.displayInput.forEach(function(item) {
-        //   const localElement = this.shadowRoot.querySelector('#' + item.id);
-
-        //   if (localElement !== null) {
-        //     this._addToEchoInput(item.id, item.label, item.value);
-        //   }
-        // });
       }
 
       _addToEchoInput(id, label, value) {
@@ -386,7 +368,6 @@
 
       _presubmit() {
         let newBody = {
-          "squadId": this._findEchoInputValue("squadId"),
           "contact": {
             "name": this._findEchoInputValue("name"),
             "phoneNumber":  this._findEchoInputValue("phone")
@@ -407,15 +388,17 @@
         };
 
         let form = this.shadowRoot.querySelector('#form');
-
         form.request.body = newBody;
         form.request.headers = {
-          'content-type': 'application/json'
+          'content-type': 'application/json',
+          'authorization': 'Bearer ' + this.user.userIdToken,
+          'user-pool-id': '' + this.user.userPoolId
         };
       }
 
       _submit() {
-        // this.$.form.submit();
+        let button = this.shadowRoot.querySelector('#submitButton');
+        button.textContent = 'Processing ...';
         let localElement = this.shadowRoot.querySelector('#form');
         localElement.submit()
       }
