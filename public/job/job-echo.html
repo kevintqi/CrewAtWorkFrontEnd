@@ -35,7 +35,7 @@
     <aws-login></aws-login>
 
     <iron-pages selected="[[page]]" attr-for-selected="name" fallback-selection="empty-echo-display">
-      <empty-echo-display name="empty-echo-display"></empty-echo-display>
+      <empty-echo-display name="beca-reset"></empty-echo-display>
       <job-list-echo-display name="beca-list-jobs" user={{user}}></job-list-echo-display>
       <job-create-echo-display name="beca-create-job" user={{user}}></job-create-echo-display>
     </iron-pages>
@@ -131,6 +131,7 @@
         switch (cmd) {
           case "beca-list-jobs":
           case "beca-create-job":
+          case "beca-reset":
             this.page = cmd;
             break;
           default:
@@ -147,7 +148,7 @@
        ** @param {boolean} true enable beca, false disable beca
        **/
       _enableBeca(option) {
-        let action = (option === true) ? "enable" : "disable";
+        let action = (option === true) ? "forceEnable" : "disable";
         var ajax = this.$.becaSource;
         ajax.method = "post";
 
@@ -169,7 +170,7 @@
         ajax.method = "post";
         ajax.body = {
           "event": {
-            "name": "WELCOME",
+            "name": "BECA_WELCOME",
             "data": {
               "userId": this.user.email,
               "role": this.user.role

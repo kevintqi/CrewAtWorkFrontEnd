@@ -240,9 +240,11 @@
             this.$['waiting-spinner'].active = true;
             this.$['card-waiting'].className = 'card state-ready layout horizontal';
             this.showSpinner = true;
-            break;
-          case "beca-list-jobs-specify-squad":
             this._getJobs();
+            break;
+          case "beca-reset":
+            this.loading = true;
+            this.set('jobs', []);
             break;
           default:
             console.log("Error: unknown command");

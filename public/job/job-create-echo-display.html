@@ -281,6 +281,12 @@
             this.set('jobInputStatus', false);
             this.set('isDone', true);
             break;
+          case "beca-reset":
+            this.echoInput = [];
+            this.set('jobInputStatus', false);
+            this.set('showReady', false);
+            this.set('isDone', false);
+            break;
           default:
             console.log("Error: unknown command");
         }
