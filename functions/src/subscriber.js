@@ -34,6 +34,7 @@ class Subscriber {
 
     _getToken(userIdStr) {
         const userId = btoa(userIdStr);
+        console.log(userId);
         return this.database.ref(`${this.subscriberKey}/${userId}`).once('value')
             .then((snapshot) => {
                 return snapshot.val();
