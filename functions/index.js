@@ -15,28 +15,6 @@ admin.initializeApp();
 const subscriber = new Subscriber(admin);
 const publisher = new Publisher(admin);
 const invoker = new Invoker();
-exports.intentFulfillment = functions.https.onRequest((req, res) => {
-    console.log(req.headers);
-    console.log(req.body);
-    subscriber.getToken(req.body.userId)
-    .then((token) => {
-        const data = {
-            title: req.body.queryResult.action,
-            body: JSON.stringify(req.body.queryResult.parameters)
-        }
-        return publisher.send(token, data);
-    }).then(() => {
-        return res.status(200).end();
-    }).catch((err) => {
-        console.log(err);
-        if (err.statusCode === 200) {
-            return res.status(200).end();
-        }
-        return res.json({
-            'fulfillmentText': 'Oops! Something went wrong.'
-        });
-    });
-});
 
 exports.assistantManagement = functions.https.onRequest((req, res) => {
     corsProxy(req, res, () => {    
@@ -59,6 +37,28 @@ exports.assistantInvocation = functions.https.onRequest((req, res) => {
             return res.status(200).end();
         }).catch((err) => {
             return res.status(err.statusCode).send(err.statusMessage).end();
+        });
+    });
+});
+
+exports.intentFulfillment = functions.https.onRequest((req, res) => {
+    console.log(req.body);
+    subscriber.getToken(req.body.queryResult.parameters.userId)
+    .then((token) => {
+        const data = {
+            title: req.body.queryResult.action,
+            body: JSON.stringify(req.body.queryResult.parameters)
+        }
+        return publisher.send(token, data);
+    }).then(() => {
+        return res.status(200).end();
+    }).catch((err) => {
+        console.log(err);
+        if (err.statusCode === 200) {
+            return res.status(200).end();
+        }
+        return res.json({
+            'fulfillmentText': 'Oops! Something went wrong.'
         });
     });
 });
