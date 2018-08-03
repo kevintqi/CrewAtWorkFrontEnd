@@ -1,11 +1,10 @@
 # Cloud Function - Voice Assistant Helpers
 
 ## Assistant Management
-Register/enable or disable/remove notifications from Beca-Assistant to a device (as identified by a `token`) for a user (as identified by `userId`).
+Register or remove a device (as identified by a `token`) for accepting notifications from Beca-Assistant for a user (as identified by `userId`).
  
 ```
 curl -i -X POST -H "Content-Type: application/json" -d '{"action":"disable","data": {"userId":"userIdVal", "role":"manager", "token":"tokenVal"}}'  https://us-central1-crewatworkfrontend.cloudfunctions.net/assistantManagement
-http://localhost:5001/crewatworkfrontend/us-central1/assistantManagement
 ```
 ```
 validAction = ['enable', 'forceEnable', 'disable']
