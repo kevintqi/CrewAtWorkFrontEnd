@@ -1,16 +1,17 @@
-<link rel="import" href="../bower_components/polymer/polymer-element.html">
-<link rel="import" href="../bower_components/polymerfire/firebase-messaging.html">
-<link rel="import" href="../bower_components/polymerfire/polymerfire.html">
-<link rel="import" href="../bower_components/polymerfire/firebase-app.html">
-<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
-<link rel="import" href="../config/shared-styles.html">
+<link rel="import" href="./bower_components/polymer/polymer-element.html">
+<link rel="import" href="./bower_components/polymerfire/firebase-messaging.html">
+<link rel="import" href="./bower_components/polymerfire/polymerfire.html">
+<link rel="import" href="./bower_components/polymerfire/firebase-app.html">
+<link rel="import" href="./bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="./config/shared-styles.html">
 
-<link rel="import" href="empty-echo-display.html">
-<link rel="import" href="job-list-echo-display.html">
-<link rel="import" href="job-create-echo-display.html">
-<link rel="import" href="../login/aws-login.html">
+<link rel="import" href="./job/empty-echo-display.html">
+<link rel="import" href="./job/job-list-echo-display.html">
+<link rel="import" href="./job/job-create-echo-display.html">
+<link rel="import" href="./user/user-create-echo-display.html">
+<link rel="import" href="./login/aws-login.html">
 
-<dom-module id="job-echo">
+<dom-module id="echo-display">
   <template>
     <style include="shared-styles">
       :host {
@@ -38,6 +39,7 @@
       <empty-echo-display name="beca-reset"></empty-echo-display>
       <job-list-echo-display name="beca-list-jobs" user={{user}}></job-list-echo-display>
       <job-create-echo-display name="beca-create-job" user={{user}}></job-create-echo-display>
+      <user-create-echo-display name="beca-create-user" user={{user}}></user-create-echo-display>
     </iron-pages>
 
     <div class="card">
@@ -52,9 +54,9 @@
   </template>
 
   <script>
-    class JobEcho extends Polymer.Element {
+    class EchoDisplay extends Polymer.Element {
       static get is() {
-        return 'job-echo';
+        return 'echo-display';
       }
 
       static get properties() {
@@ -90,10 +92,10 @@
 
       _handleUserUpdate(user) {
         this.set('user', user);
-        console.log("new user <job-echo>: ", this.user.email);
-        console.log("new role <job-echo>: ", this.user.role);
-        console.log("new userPoolId <job-echo>: ", this.user.userPoolId);
-        console.log("new userIdToken <job-echo>: ", this.user.userIdToken);
+        console.log("new user <echo>: ", this.user.email);
+        console.log("new role <echo>: ", this.user.role);
+        console.log("new userPoolId <echo>: ", this.user.userPoolId);
+        console.log("new userIdToken <echo>: ", this.user.userIdToken);
         if (this._isEmptyObject(user)) {
           this._enableBeca(false);
         } else {
@@ -131,6 +133,7 @@
         switch (cmd) {
           case "beca-list-jobs":
           case "beca-create-job":
+          case "beca-create-user":
           case "beca-reset":
             this.page = cmd;
             break;
@@ -183,6 +186,6 @@
       }
 
     }
-    window.customElements.define(JobEcho.is, JobEcho);
+    window.customElements.define(EchoDisplay.is, EchoDisplay);
   </script>
 </dom-module>

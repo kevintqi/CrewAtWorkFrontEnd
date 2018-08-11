@@ -1,0 +1,449 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/iron-icons/av-icons.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-app.html">
+<link rel="import" href="../bower_components/polymerfire/firebase.html">
+<link rel="import" href="../bower_components/iron-form/iron-form.html">
+<link rel="import" href="../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../bower_components/iron-label/iron-label.html">
+
+<link rel="import" href="../config/shared-styles.html">
+
+<dom-module id="form-base">
+  <template>
+    <style include="shared-styles iron-flex">
+      :host {
+        display: block;
+        padding: 10px;
+      }
+
+      paper-spinner.multi {
+        --paper-spinner-layer-1-color: var(--paper-purple-500);
+        --paper-spinner-layer-2-color: var(--paper-cyan-500);
+        --paper-spinner-layer-3-color: var(--paper-blue-grey-500);
+        --paper-spinner-layer-4-color: var(--paper-amber-500);
+      }
+
+      .state-active {
+        visibility: active;
+        background: lightskyblue;
+      }
+
+      .state-inactive {
+        visibility: hidden;
+        background: gray;
+      }
+
+      .state-processed {
+        visibility: visible;
+        background: white;
+      }
+
+      /* Used for card-done */
+
+      .state-confirmed {
+        background: gold;
+      }
+
+      /* Used for card-waiting */
+
+      .state-waiting {
+        background: orangered;
+        color: mintcream;
+      }
+
+      /* Used for card-waiting */
+
+      .state-ready {
+        background: green;
+        color: mintcream;
+      }
+
+      iron-label {
+        color: black;
+        font-weight: bold;
+        font-size: x-large;
+      }
+
+      paper-button.green {
+        background-color: var(--paper-green-500);
+        color: white;
+      }
+
+      paper-button.green[active] {
+        background-color: var(--paper-red-500);
+      }
+
+      paper-button.disabled {
+        color: white;
+      }
+
+      iron-list {
+        width: auto;
+        margin: auto;
+        display: flex;
+        flex-direction: column;
+      }
+
+      label.list-item {
+        color: darkgreen;
+        text-transform: uppercase;
+        padding-right: 20px;
+      }
+
+      .list-container {
+        margin: auto;
+      }
+
+      .itemDiv {
+        width: 150px;
+        max-width: 150px;
+        display: inline-block;
+      }
+    </style>
+
+    <div class="card">
+      <template is="dom-if" if="{{showReady}}">
+        <div class="card state-waiting layout horizontal" id="ready-section">
+          <iron-icon icon="av:hearing"></iron-icon>
+          <paper-spinner class="multi" active></paper-spinner>
+          <label id="label-waiting">
+            <h4>Ready to receive beca input</h4>
+          </label>
+        </div>
+      </template>
+
+
+      <template id='template-input' is="dom-if" if="{{inputStatus}}">
+        <iron-list id="input-list" items="[[displayInput]]" as="item">
+          <template id='x'>
+            <div>
+              <div class="card state-active layout horizontal " id="input-card">
+                <iron-icon icon="icons:record-voice-over" id="input-card-icon"></iron-icon>
+                <paper-spinner class="multi" active id="input-card-spinner"></paper-spinner>
+                <paper-input id=[[item.id]] name=[[item.name]] label=[[item.label]] value=[[item.value]] required></paper-input>
+              </div>
+            </div>
+          </template>
+        </iron-list>
+      </template>
+
+
+      <template id='template-form' is="dom-if" if="{{showStatus}}">
+        <div id="status" class="card">
+          <h2>Your request was submitted</h2>
+          <pre>HTTP response: [[response]]</pre>
+          <pre>HTTP Error: [[errorMsg]]</pre>
+        </div>
+      </template>
+
+
+      <template id='template-form' is="dom-if" if="{{isDone}}">
+        <iron-form id="form" on-iron-form-response="_handleFormSubmit" on-iron-form-error="_handleError" on-iron-form-presubmit="_presubmit"
+          content-type="application/json">
+
+          <form method="post" content-type="application/json" action="[[postUrl]]">
+            <div class="card state-confirmed layout horizontal" id="submit-section">
+              <iron-label> Ready to submit request </iron-label>
+              <iron-icon icon="icons:thumb-up"></iron-icon>
+              <paper-button id="submitButton" class="green" on-tap="_submit">Submit</paper-button>
+            </div>
+          </form>
+        </iron-form>
+      </template>
+
+      <template is="dom-repeat" items="[[echoInput]]">
+        <div class="card list-container layout horizontal">
+          <div class="itemDiv">
+            <label class="list-item">
+              <strong>
+                [[item.label]]
+              </strong>
+            </label>
+          </div>
+          <div>
+            <label>[[item.value]]</label>
+          </div>
+        </div>
+      </template>
+
+    </div>
+  </template>
+
+  <script>
+    class FormBase extends Polymer.Element {
+      static get is() {
+        return 'form-base';
+      }
+
+      /**
+       ** MUST OVERRIDE
+       **/
+      normalizedCmd(cmd) {
+        throw new Error('Must override function', 'normalizedCmd');
+      }
+
+      /**
+       ** MUST OVERRIDE
+       **/
+      normalizedDisplayInput(cmd, values) {
+        throw new Error('Must override function', 'normalizedDisplayInput');
+      }
+
+      /**
+       ** MUST OVERRIDE
+       **/
+      normalizedRequestBody() {
+        throw new Error('Must override function', 'normalizedRequestBody');
+      }
+
+      /**
+       ** MUST OVERRIDE
+       **/
+      getPostUrl() {
+        throw new Error('Must override function', 'getPostUrl');
+      }
+
+      static get properties() {
+        return {
+          user: {
+            type: Object,
+            notify: true,
+            value: function () {
+              return {};
+            }
+          },
+          response: {
+            type: String,
+            value: "none"
+          },
+          errorMsg: {
+            type: String,
+            value: "No errors"
+          },
+          displayInput: {
+            type: Array,
+            notify: true,
+            value: function () {
+              return []
+            }
+          },
+          echoInput: {
+            type: Array,
+            notify: true,
+            value: function () {
+              return [
+                // Example { 'id': 'squadId', 'label': 'Squad ID', 'value': '3333'},
+              ]
+            }
+          },
+          idx: {
+            type: Number,
+            notify: true,
+            value: 0
+          },
+          inputStatus: {
+            type: Boolean,
+            notify: true,
+            value: false
+          },
+          isDone: {
+            type: Boolean,
+            notify: true,
+            value: false
+          },
+          showReady: {
+            type: Boolean,
+            notify: true,
+            value: true
+          },
+          ShowStatus: {
+            type: Boolean,
+            notify: true,
+            value: false
+          },
+          postUrl: {
+            type: String,
+            notify: true,
+            value: "none"
+          }
+        }
+      }
+
+
+
+      ready() {
+        super.ready();
+        window.addEventListener('echo-msg', e => {
+          this._handleEcho(e)
+        });
+
+        this.postUrl = this.getPostUrl();
+      }
+
+      _handleEcho(e) {
+        var payload = JSON.parse(e.detail.msg);
+        this._processCommand(e.detail.cmd, payload);
+      }
+
+      _setDisplayInput(id, name, label, value) {
+        const elem = {
+          'id': id,
+          'name': name,
+          'label': label,
+          'value': value
+        };
+        this.push('displayInput', elem);
+      }
+
+      _addToEchoInput(id, label, value) {
+        var index = this.echoInput.findIndex(function (item, i) {
+          return item.id === id;
+        });
+
+        let elem = {
+          'id': id,
+          'label': label,
+          'value': value
+        };
+
+        if (index !== -1) {
+          this.splice('echoInput', index, 1, );
+        }
+
+        this.push('echoInput', elem);
+
+        this.idx = this.echoInput.findIndex(function (item, i) {
+          return item.id === id;
+        });
+      }
+
+      _findEchoInputValue(id) {
+        let index = this.echoInput.findIndex(function (item, i) {
+          return item.id === id;
+        });
+
+        return (index !== -1) ? this.echoInput[index].value : "unknown";
+      }
+
+      _presubmit() {
+        let newBody = this._getRequestBody();
+
+        let form = this.shadowRoot.querySelector('#form');
+        form.request.body = newBody;
+        form.request.headers = {
+          'content-type': 'application/json',
+          'authorization': 'Bearer ' + this.user.userIdToken,
+          'user-pool-id': '' + this.user.userPoolId
+        };
+      }
+
+      _submit() {
+        let button = this.shadowRoot.querySelector('#submitButton');
+        button.textContent = 'Processing ...';
+        let localElement = this.shadowRoot.querySelector('#form');
+        localElement.submit()
+      }
+
+      _handleFormSubmit(e) {
+        this.response = JSON.stringify(e.detail.response, '', 2);
+        this.set('isDone', false);
+        this.set('showStatus', true);
+      }
+
+      _handleError(e) {
+        console.log("form errors: ", e.detail.error);
+        this.errorMsg = e.detail.error;
+        this.set('isDone', false);
+        this.set('showStatus', true);
+      }
+
+      _reset() {
+        this.splice('echoInput', 0, this.echoInput.length, );
+        this.splice('displayInput', 0, this.displayInput.length, );
+
+        this.set('response', "");
+        this.set('errorMsg', "");
+
+        this.set('inputStatus', false);
+        this.set('showReady', false);
+        this.set('isDone', false);
+        this.set('showStatus', false);
+
+        let button = this.shadowRoot.querySelector('#submitButton');
+        button.textContent = 'Submit';
+      }
+
+      _processCommand(cmd, values) {
+        let action = this.normalizedCmd(cmd);
+        switch (action) {
+          case 'trigger-start':
+            let localElement = this.shadowRoot.querySelector('#ready-section');
+            localElement.className = 'card state-ready layout horizontal';
+            this.set('showReady', true);
+            break;
+          case "trigger-input":
+            this.set('inputStatus', true);
+            this.set('isDone', false);
+            this.set('showReady', false);
+            break;
+          case "trigger-submit":
+            this.set('showReady', false);
+            this.set('inputStatus', false);
+            this.set('isDone', true);
+            break;
+          case "trigger-reset":
+            this._reset();
+            break;
+          default:
+            console.log("Error: unknown command: ", cmd);
+        }
+        this._addToDisplayInput(cmd, values);
+      }
+
+      _getRequestBody() {
+        let values = this.normalizedRequestBody();
+        let body = {};
+
+        let localThis = this;
+        values.forEach(function(entry) {
+          let clientAttr = entry['client-attribute'];
+          let serverAttr = entry['server-attribute'];
+          if(entry.hasOwnProperty('top-attribute')){
+            let topAttr = entry['top-attribute'];
+            if (!body.hasOwnProperty(topAttr)) {
+              body[topAttr] = {};
+            }
+            body[topAttr][serverAttr] = localThis._findEchoInputValue(clientAttr);
+          } else {
+            body[serverAttr] = localThis._findEchoInputValue(clientAttr);
+          }
+        });
+
+        return body;
+      }
+
+      _addToDisplayInput(cmd, values) {
+        let inputs = this.normalizedDisplayInput(cmd, values);
+        if (inputs === undefined) {
+          return;
+        }
+
+        this.displayInput = [];
+        let localThis = this;
+        inputs.forEach(function(entry){
+          localThis._setDisplayInput(entry.id, entry.name, entry.label, entry.value);
+          localThis._addToEchoInput(entry.id, entry.label, entry.value);
+        });
+      }
+    }
+
+    window.customElements.define(FormBase.is, FormBase);
+  </script>
+</dom-module>

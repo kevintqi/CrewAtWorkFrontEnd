@@ -27,7 +27,6 @@
     "vaadin-grid": "vaadin/vaadin-grid#^4.1.8",
     "iron-pages": "PolymerElements/iron-pages#^2.1.1",
     "iron-form": "PolymerElements/iron-form#^2.3.0",
-    "iron-list": "PolymerElements/iron-list#^2.0.15",
     "iron-label": "PolymerElements/iron-label#^2.1.0",
     "paper-password-input": "^2.3.0",
     "aws-sdk": "aws-sdk-js#^2.266.1",

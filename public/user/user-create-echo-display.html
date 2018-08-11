@@ -1,0 +1,131 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+
+<link rel="import" href="../components/form-base.html">
+
+
+<dom-module id="user-create-echo-display">
+
+  <script>
+    class UserCreateEchoDisplay extends FormBase {
+      static get is() {
+        return 'user-create-echo-display';
+      }
+
+      normalizedDisplayInput(cmd, values) {
+        switch (cmd) {
+          case "beca-create-user-name":
+            return [
+              {
+                'id': 'name',
+                'name': 'name',
+                'label': 'Name',
+                'value': values.name
+              }
+            ];
+          case "beca-create-user-role":
+            return [
+              {
+                'id': 'role',
+                'name': 'role',
+                'label': 'Role',
+                'value': values.role
+              }
+            ];
+          case "beca-create-user-phone":
+          return [
+              {
+                'id': 'phone',
+                'name': 'phone',
+                'label': 'Phone',
+                'value': values.phone
+              }
+            ];
+          case "beca-create-user-email":
+          return [
+              {
+                'id': 'email',
+                'name': 'email',
+                'label': 'Email',
+                'value': values.email
+              }
+            ];
+          case "beca-create-user-picture":
+          return [
+              {
+                'id': 'picture',
+                'name': 'picture',
+                'label': 'Picture',
+                'value': values.picture
+              }
+            ];
+          case "beca-create-user-gender":
+          return [
+              {
+                'id': 'gender',
+                'name': 'gender',
+                'label': 'Gender',
+                'value': values.gender
+              }
+            ];
+          }
+      }
+
+      normalizedCmd(cmd) {
+        switch (cmd) {
+          case "beca-create-user":
+            return 'trigger-start';
+          case "beca-create-user-name":
+          case "beca-create-user-role":
+          case "beca-create-user-phone":
+          case "beca-create-user-email":
+          case "beca-create-user-picture":
+          case "beca-create-user-gender":
+            return 'trigger-input';
+          case "beca-create-user-submit":
+            return 'trigger-submit';
+          case "beca-reset":
+            return 'trigger-reset';
+          default:
+            console.log("Error: unknown command: ", cmd);
+        }
+      }
+
+      normalizedRequestBody() {
+        return [
+          {
+            'server-attribute': 'name',
+            'client-attribute': 'name'
+          },
+          {
+            'server-attribute': 'role',
+            'client-attribute': 'role'
+          },
+          {
+            'server-attribute': 'phoneNumber',
+            'client-attribute': 'phone'
+          },
+          {
+            'server-attribute': 'email',
+            'client-attribute': 'email'
+          },
+          {
+            'server-attribute': 'picture',
+            'client-attribute': 'picture'
+          },
+          {
+            'server-attribute': 'gender',
+            'client-attribute': 'gender'
+          }
+        ]
+      }
+
+      getPostUrl() {
+        return "https://4s3eofq8j5.execute-api.us-west-2.amazonaws.com/dev/api/v1/user";
+      }
+    }
+
+    window.customElements.define(UserCreateEchoDisplay.is, UserCreateEchoDisplay);
+  </script>
+</dom-module>
+
+//https://www.polymer-project.org/2.0/docs/devguide/dom-template

@@ -4,7 +4,7 @@ var child;
 
 var cmd_part1 = "curl --header \"Authorization: key=AAAAYbAFsSY:APA91bFFN2uA_9N63AqHRpOk7_pv4ZL7VGcrVF9nBUr1b-Z2YzmIRCN6UNYCW_rxN-Nwt1tip_hi647QKHn1EzNMvdei4VrKmmqiTO5tzXeqkxeKqGOGLVKS_uQro9yhTxyETH15W_zg\"" +
 " --header \"Content-Type: application/json\" -d '{\"to\": \"";
-var token = "fm2CLLGObP0:APA91bHssHifTFaPH3DG2I97qGtxHAxAr4o9S2_oH9l_CO-eiIJuh8BE9LB7j1PjMeYA7bc1W9VyXY7ofUVK_WmlAO5BMo_MBdXrKauBPHfpX6YWQzSFcojdTCw6AHH232z60A3a3XJ9\"";
+var token = "flbOVVsJPQw:APA91bG6z3OAUdRkD0qpxlqMvd3yAZH_GA06Z-gubN6AhNYTAQtdyDawAcuNcMbkM8N7MZwmbFcf7auJsG-fKgfV4u0S-PLXEnO8KwU9Z8Ah1lBuNFz7xZKSrc5PJkAS-0XH9wCnHFim\"";
 var cmd_part2 = ", \"notification\": {\"title\": \"";
 var cmd_title = "card-waiting";
 var cmd_part3 = "\", \"body\": ";
@@ -45,7 +45,9 @@ var schedule_questions = [
       new inquirer.Separator(),
       "beca-create-job-schedule",
       new inquirer.Separator(),
-      "beca-create-job-submit"
+      "beca-create-job-submit",
+      new inquirer.Separator(),
+      "beca-reset"
     ]
   },
   {
@@ -172,7 +174,7 @@ function getScheduleInfo(answers) {
 ////
 ////
 var questions = schedule_questions;
-var bodyFunc = getSquadInfo;
+var bodyFunc = getScheduleInfo;
 ////
 ////
 ////

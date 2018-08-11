@@ -243,11 +243,11 @@
             this._getJobs();
             break;
           case "beca-reset":
-            this.loading = true;
+            this.set('loading', true);
             this.set('jobs', []);
             break;
           default:
-            console.log("Error: unknown command");
+            console.log("Error: unknown command: ", cmd);
         }
       }
 
@@ -277,3 +277,5 @@
     window.customElements.define(JobListEchoDisplay.is, JobListEchoDisplay);
   </script>
 </dom-module>
+
+//polymer 2.0 vaadin-grid-column repeat

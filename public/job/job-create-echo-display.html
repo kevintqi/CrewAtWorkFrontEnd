@@ -1,427 +1,181 @@
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
-<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
-<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
-<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
-<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
-<link rel="import" href="../bower_components/iron-icons/av-icons.html">
-<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
-<link rel="import" href="../bower_components/paper-input/paper-input.html">
-<link rel="import" href="../bower_components/paper-button/paper-button.html">
-<link rel="import" href="../bower_components/polymerfire/firebase-app.html">
-<link rel="import" href="../bower_components/polymerfire/firebase.html">
-<link rel="import" href="../bower_components/iron-form/iron-form.html">
-<link rel="import" href="../bower_components/iron-list/iron-list.html">
-<link rel="import" href="../bower_components/iron-label/iron-label.html">
 
-<link rel="import" href="../config/shared-styles.html">
+<link rel="import" href="../components/form-base.html">
+
 
 <dom-module id="job-create-echo-display">
-  <template>
-    <style include="shared-styles iron-flex">
-      :host {
-        display: block;
-        padding: 10px;
-      }
-
-      paper-spinner.multi {
-        --paper-spinner-layer-1-color: var(--paper-purple-500);
-        --paper-spinner-layer-2-color: var(--paper-cyan-500);
-        --paper-spinner-layer-3-color: var(--paper-blue-grey-500);
-        --paper-spinner-layer-4-color: var(--paper-amber-500);
-      }
-
-      .state-active {
-        visibility: active;
-        background: lightskyblue;
-      }
-
-      .state-inactive {
-        visibility: hidden;
-        background: gray;
-      }
-
-      .state-processed {
-        visibility: visible;
-        background: white;
-      }
-
-      /* Used for card-done */
-
-      .state-confirmed {
-        background: gold;
-      }
-
-      /* Used for card-waiting */
-
-      .state-waiting {
-        background: orangered;
-        color: mintcream;
-      }
-
-      /* Used for card-waiting */
-
-      .state-ready {
-        background: green;
-        color: mintcream;
-      }
-
-      iron-label {
-        color: black;
-        font-weight: bold;
-        font-size: x-large;
-      }
-
-      paper-button.green {
-        background-color: var(--paper-green-500);
-        color: white;
-      }
-
-      paper-button.green[active] {
-        background-color: var(--paper-red-500);
-      }
-
-      paper-button.disabled {
-        color: white;
-      }
-
-      iron-list {
-        width: auto;
-        margin: auto;
-        display: flex;
-        flex-direction: column;
-      }
-
-      label.list-item {
-        color: darkgreen;
-        text-transform: uppercase;
-        padding-right: 20px;
-      }
-
-      .list-container {
-        margin: auto;
-      }
-
-      .itemDiv {
-        width: 150px;
-        max-width: 150px;
-        display: inline-block;
-      }
-
-    </style>
-
-    <div class="card">
-      <template is="dom-if" if="{{showReady}}">
-        <div class="card state-waiting layout horizontal" id="beca-create-job">
-          <iron-icon icon="av:hearing"></iron-icon>
-          <paper-spinner class="multi" active id="beca-create-job-spinner"></paper-spinner>
-          <label id="label-waiting">
-            <h4>Ready for input create job</h4>
-          </label>
-        </div>
-      </template>
-
-
-      <template id='template-input' is="dom-if" if="{{jobInputStatus}}">
-        <iron-list id="input-list" items="[[displayInput]]" as="item">
-          <template id='x'>
-            <div>
-              <div class="card state-active layout horizontal " id="input-card">
-                <iron-icon icon="icons:record-voice-over" id="input-card-icon"></iron-icon>
-                <paper-spinner class="multi" active id="input-card-spinner"></paper-spinner>
-                <paper-input id=[[item.id]] name=[[item.name]] label=[[item.label]] value=[[item.value]] required></paper-input>
-              </div>
-            </div>
-          </template>
-        </iron-list>
-      </template>
-
-
-      <template id='template-form' is="dom-if" if="{{showStatus}}">
-        <div id="status" class="card">
-          <h2>Your job was submitted</h2>
-          <pre>HTTP response: [[response]]</pre>
-          <pre>HTTP Error: [[errorMsg]]</pre>
-        </div>
-      </template>
-
-
-      <template id='template-form' is="dom-if" if="{{isDone}}">
-        <iron-form id="form" on-iron-form-response="_handleFormSubmit" on-iron-form-error="_handleError" on-iron-form-presubmit="_presubmit"
-          content-type="application/json">
-
-          <form method="post" content-type="application/json" action="https://4s3eofq8j5.execute-api.us-west-2.amazonaws.com/dev/api/v1/job">
-            <div class="card state-confirmed layout horizontal" id="beca-create-job-submit">
-              <iron-label> Ready to submit job </iron-label>
-              <iron-icon icon="icons:thumb-up"></iron-icon>
-              <paper-button id="submitButton" class="green" on-tap="_submit">Submit</paper-button>
-            </div>
-          </form>
-        </iron-form>
-      </template>
-
-      <div>
-        <iron-list items="[[echoInput]]" as="item">
-          <template>
-            <div class="card list-container layout horizontal">
-              <div class="itemDiv">
-                <label class="list-item">
-                  <strong>[[item.label]]
-                  <strong>
-                </label>
-              </div>
-              <div>
-                <label>[[item.value]]</label>
-              </div>
-            </div>
-          </template>
-        </iron-list>
-      </div>
-
-    </div>
-  </template>
 
   <script>
-    class JobCreateEchoDisplay extends Polymer.Element {
+    class JobCreateEchoDisplay extends FormBase {
       static get is() {
         return 'job-create-echo-display';
       }
 
-      static get properties() {
-        return {
-          user: {
-            type: Object,
-            notify: true,
-            value: function () {
-              return {};
-            }
-          },
-          response: {
-            type: String,
-            value: "none"
-          },
-          errorMsg: {
-            type: String,
-            value: "No errors"
-          },
-          displayInput: {
-            type: Array,
-            notify: true,
-            value: function () {
-              return [
-              ]
-            }
-          },
-          echoInput: {
-            type: Array,
-            notify: true,
-            value: function () {
-              return [
-                // Example { 'id': 'squadId', 'label': 'Squad ID', 'value': '3333'},
-              ]
-            }
-          },
-          idx: {
-            type: Number,
-            notify: true,
-            value: 0
-          },
-          jobInputStatus: {
-            type: Boolean,
-            notify: true,
-            value: false
-          },
-          isDone: {
-            type: Boolean,
-            notify: true,
-            value: false
-          },
-          showReady: {
-            type: Boolean,
-            notify: true,
-            value: true
-          },
-          ShowStatus: {
-            type: Boolean,
-            notify: true,
-            value: false
-          },
-        }
+      normalizedDisplayInput(cmd, values) {
+        switch (cmd) {
+          case "beca-create-job-contact":
+            return [
+              {
+                'id': 'name',
+                'name': 'name',
+                'label': 'Name',
+                'value': values.name
+              },
+              {
+                'id': 'phone',
+                'name': 'phone',
+                'label': 'Phone Number',
+                'value': values.phone
+              }
+            ];
+          case "beca-create-job-location":
+            return [
+              {
+                'id': 'street',
+                'name': 'street',
+                'label': 'Street',
+                'value': values.street
+              },
+              {
+                'id': 'city',
+                'name': 'city',
+                'label': 'City',
+                'value': values.city
+              },
+              {
+                'id': 'zipCode',
+                'name': 'zipCode',
+                'label': 'Zip code',
+                'value': values.zipCode
+              },
+              {
+                'id': 'state',
+                'name': 'state',
+                'label': 'State',
+                'value': values.state
+              }
+            ];
+          case "beca-create-job-schedule":
+          return [
+              {
+                'id': 'repeatType',
+                'name': 'repeatType',
+                'label': 'Repeat Type',
+                'value': values.repeatType
+              },
+              {
+                'id': 'startDate',
+                'name': 'startDate',
+                'label': 'Start Date',
+                'value': values.startDate
+              },
+              {
+                'id': 'endDate',
+                'name': 'endDate',
+                'label': 'End Date',
+                'value': values.endDate
+              },
+              {
+                'id': 'startTime',
+                'name': 'startTime',
+                'label': 'Start Time',
+                'value': values.startTime
+              },
+              {
+                'id': 'endTime',
+                'name': 'endTime',
+                'label': 'End Time',
+                'value': values.endTime
+              }
+            ];
+          }
       }
 
-      ready() {
-        super.ready();
-        window.addEventListener('echo-msg', e => {
-          this._handleEcho(e)
-        });
-      }
-
-      _handleEcho(e) {
-        var payload = JSON.parse(e.detail.msg);
-        this._processCmd(e.detail.cmd, payload);
-      }
-
-      _processCmd(cmd, values) {
-
+      normalizedCmd(cmd) {
         switch (cmd) {
           case "beca-create-job":
-            // this.$['label-waiting'].innerHTML = '<h3>' + value + '</h3>';
-            let localElement = this.shadowRoot.querySelector('#beca-create-job');
-            localElement.className = 'card state-ready layout horizontal';
-            break;
+            return 'trigger-start';
           case "beca-create-job-contact":
           case "beca-create-job-location":
           case "beca-create-job-schedule":
-            this.set('jobInputStatus', true);
-            this.set('isDone', false);
-            this.set('showReady', false);
-            break;
+            return 'trigger-input';
           case "beca-create-job-submit":
-            this.set('showReady', false);
-            this.set('jobInputStatus', false);
-            this.set('isDone', true);
-            break;
+            return 'trigger-submit';
           case "beca-reset":
-            this.echoInput = [];
-            this.set('jobInputStatus', false);
-            this.set('showReady', false);
-            this.set('isDone', false);
-            break;
+            return 'trigger-reset';
           default:
-            console.log("Error: unknown command");
-        }
-
-        this._addToDisplayInput(cmd, values);
-      }
-
-      _addToDisplayInput(cmd, values) {
-          switch (cmd) {
-          case "beca-create-job-contact":
-            this.displayInput = []
-            this._setDisplayInput("name", "name", "Name", values.name);
-            this._setDisplayInput("phone", "phone", "Phone Number", values.phone);
-            this._addToEchoInput("name", "Name", values.name);
-            this._addToEchoInput("phone", "Phone Number", values.phone);
-            break;
-          case "beca-create-job-location":
-            this.displayInput = []
-            this._setDisplayInput("street", "street", "Street", values.street);
-            this._setDisplayInput("city", "city", "City", values.city);
-            this._setDisplayInput("state", "state", "State", values.state);
-            this._setDisplayInput("zipCode", "zipCode", "Zip Code", values.zipCode);
-            this._addToEchoInput("street", "Street", values.street);
-            this._addToEchoInput("city", "City", values.city);
-            this._addToEchoInput("state", "State", values.state);
-            this._addToEchoInput("zipCode", "Zip Code", values.zipCode);
-            break;
-          case "beca-create-job-schedule":
-          this.displayInput = []
-            this._setDisplayInput("repeatType", "repeatType", "Repeat Type", values.repeatType);
-            this._setDisplayInput("startDate", "startDate", "Start Date", values.startDate);
-            this._setDisplayInput("endDate", "endDate", "End Date", values.endDate);
-            this._setDisplayInput("startTime", "startTime", "Start Time", values.startTime);
-            this._setDisplayInput("endTime", "endTime", "End Time", values.endTime);
-            this._addToEchoInput("repeatType", "Repeat Type", values.repeatType);
-            this._addToEchoInput("startDate", "Start Date", values.startDate);
-            this._addToEchoInput("endDate", "End Date", values.endDate);
-            this._addToEchoInput("startTime", "Start Time", values.startTime);
-            this._addToEchoInput("endTime", "End Time", values.endTime);
-            break;
+            console.log("Error: unknown command: ", cmd);
         }
       }
 
-      _setDisplayInput(id, name, label, value) {
-        const elem = {
-          'id': id,
-          'name': name,
-          'label': label,
-          'value': value
-        };
-
-        this.push('displayInput', elem);
-      }
-
-      _addToEchoInput(id, label, value) {
-
-        var index = this.echoInput.findIndex(function(item, i){
-          return item.id === id;
-        });
-
-          let elem = {
-            'id': id,
-            'label': label,
-            'value': value
-          };
-
-          if (index !== -1) {
-            this.splice('echoInput', index, 1, );
-          }
-
-          this.push('echoInput', elem);
-
-          this.idx = this.echoInput.findIndex(function(item, i){
-            return item.id === id;
-          });
-      }
-
-      _findEchoInputValue(id) {
-        let index = this.echoInput.findIndex(function(item, i){
-          return item.id === id;
-        });
-
-        return (index !== -1) ? this.echoInput[index].value : "unknown";
-      }
-
-      _presubmit() {
-        let newBody = {
-          "contact": {
-            "name": this._findEchoInputValue("name"),
-            "phoneNumber":  this._findEchoInputValue("phone")
+      normalizedRequestBody() {
+        return [
+          {
+            'top-attribute': 'contact',
+            'server-attribute': 'name',
+            'client-attribute': 'name'
           },
-          "location": {
-            "street": this._findEchoInputValue("street"),
-            "city": this._findEchoInputValue("city"),
-            "state": this._findEchoInputValue("state"),
-            "zipCode": this._findEchoInputValue("zipCode")
+          {
+            'top-attribute': 'contact',
+            'server-attribute': 'phoneNumber',
+            'client-attribute': 'phone'
           },
-          "schedule": {
-            "repeatType": this._findEchoInputValue("repeatType"),
-            "startDate": this._findEchoInputValue("startDate"),
-            "endDate": this._findEchoInputValue("endDate"),
-            "startTime": this._findEchoInputValue("startTime"),
-            "endTime": this._findEchoInputValue("endTime")
+          {
+            'top-attribute': 'location',
+            'server-attribute': 'street',
+            'client-attribute': 'street'
+          },
+          {
+            'top-attribute': 'location',
+            'server-attribute': 'city',
+            'client-attribute': 'city'
+          },
+          {
+            'top-attribute': 'location',
+            'server-attribute': 'state',
+            'client-attribute': 'state'
+          },
+          {
+            'top-attribute': 'location',
+            'server-attribute': 'zipCode',
+            'client-attribute': 'zipCode'
+          },
+          {
+            'top-attribute': 'schedule',
+            'server-attribute': 'repeatType',
+            'client-attribute': 'repeatType'
+          },
+          {
+            'top-attribute': 'schedule',
+            'server-attribute': 'startDate',
+            'client-attribute': 'startDate'
+          },
+          {
+            'top-attribute': 'schedule',
+            'server-attribute': 'endDate',
+            'client-attribute': 'endDate'
+          },
+          {
+            'top-attribute': 'schedule',
+            'server-attribute': 'startTime',
+            'client-attribute': 'startTime'
+          },
+          {
+            'top-attribute': 'schedule',
+            'server-attribute': 'endTime',
+            'client-attribute': 'endTime'
           }
-        };
+        ];
 
-        let form = this.shadowRoot.querySelector('#form');
-        form.request.body = newBody;
-        form.request.headers = {
-          'content-type': 'application/json',
-          'authorization': 'Bearer ' + this.user.userIdToken,
-          'user-pool-id': '' + this.user.userPoolId
-        };
-      }
+}
 
-      _submit() {
-        let button = this.shadowRoot.querySelector('#submitButton');
-        button.textContent = 'Processing ...';
-        let localElement = this.shadowRoot.querySelector('#form');
-        localElement.submit()
-      }
-
-      _handleFormSubmit(e) {
-        this.response = JSON.stringify(e.detail.response, '', 2);
-        this.set('isDone', false);
-        this.set('showStatus', true);
-      }
-
-      _handleError(e) {
-        console.log("form errors: ", e.detail.error);
-        this.errorMsg = e.detail.error;
-        this.set('isDone', false);
-        this.set('showStatus', true);
+      getPostUrl() {
+        return "https://4s3eofq8j5.execute-api.us-west-2.amazonaws.com/dev/api/v1/user";
       }
     }
 
     window.customElements.define(JobCreateEchoDisplay.is, JobCreateEchoDisplay);
   </script>
 </dom-module>
+
+//https://www.polymer-project.org/2.0/docs/devguide/dom-template
